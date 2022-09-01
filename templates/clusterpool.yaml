@@ -1,0 +1,170 @@
+{{- range .Values.clusterGroup.managedClusterGroups }}
+{{- $group := . }}
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: ManagedClusterSet
+metadata:
+  annotations:
+    cluster.open-cluster-management.io/submariner-broker-ns: {{ .name }}-broker
+  name: {{ .name }}
+spec:
+  clusterSelector:
+    selectorType: LegacyClusterSetLabel
+---
+{{- range .clusterPool }}
+{{- $pool := . }}
+apiVersion: hive.openshift.io/v1
+kind: ClusterPool
+metadata:
+  name: "{{ .name }}"
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  labels:
+    cloud: 'AWS'
+    region: '{{ .provider.region }}'
+    vendor: OpenShift
+    cluster.open-cluster-management.io/clusterset: {{ .name }}
+spec:
+  size: {{ len .clusters }}
+  runningCount: {{ len .clusters }}
+  baseDomain: {{ .provider.baseDomain }}
+  installConfigSecretTemplateRef:
+    name: {{ .name }}-install-config 
+  imageSetRef:
+    name: img{{ .openshiftVersion }}-x86-64-appsub
+  pullSecretRef:
+    name: {{ .name }}-pull-secret
+  skipMachinePools: true # Disable MachinePool as using custom install-config
+  platform:
+    aws:
+      credentialsSecretRef:
+        name: {{ .name }}-creds
+      region: {{ .provider.region }}
+---
+{{- range .clusters }}
+apiVersion: hive.openshift.io/v1
+kind: ClusterClaim
+metadata:
+  name: '{{ . }}'
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+    cluster.open-cluster-management.io/createmanagedcluster: "true"
+  labels:
+    clusterClaimName: {{ . }}
+    {{- range $group.labels }}
+    {{ .name }}: {{ .value }}
+    {{- end }}
+    patternGroup: {{ $group.name }}
+spec:
+  clusterPoolName: {{ $pool.name }}
+---
+{{- end }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .name }}-install-config
+data:
+  # Base64 encoding of install-config yaml
+  install-config.yaml: {{ include "cluster.install-config" . | b64enc }} 
+type: Opaque
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: {{ .name }}-pull-secret
+spec: 
+  data:
+  - secretKey: openshiftPullSecret
+    remoteRef:
+      key: {{ default "secret/data/hub/openshift" .pullSecretKeyPath }}
+      property: imagePullSecret
+  refreshInterval: 24h0m0s
+  secretStoreRef: 
+    name: {{ $.Values.secretStore.name }}
+    kind: {{ $.Values.secretStore.kind }}
+  target:
+    name: {{ .name }}-pull-secret
+    creationPolicy: Owner
+    template:
+      type: kubernetes.io/dockerconfigjson
+      data:
+        .dockerconfigjson: |-
+          {{ "{{ .openshiftPullSecret | toString }}" }}
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: {{ .name }}-creds
+spec:
+  dataFrom:
+  - extract:
+      # Expects entries called: aws_access_key_id and aws_secret_access_key
+      key: {{ default "secret/data/hub/aws" .awsKeyPath }}
+  refreshInterval: 24h0m0s
+  secretStoreRef:
+    name: {{ $.Values.secretStore.name }}
+    kind: {{ $.Values.secretStore.kind }}
+  target:
+    name: {{ .name }}-creds
+    creationPolicy: Owner
+    template:
+      type: Opaque
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: {{ .name }}-infra-creds
+spec: 
+  data:
+  - secretKey: openshiftPullSecret
+    remoteRef:
+      key: {{ default "secret/data/hub/openshift" .pullSecretKeyPath }}
+      property: imagePullSecret
+  - secretKey: awsKeyId
+    remoteRef:
+      key: {{ default "secret/data/hub/aws" .awsKeyPath }}
+      property: aws_access_key_id
+  - secretKey: awsAccessKey
+    remoteRef:
+      key: {{ default "secret/data/hub/aws" .awsKeyPath }}
+      property: aws_secret_access_key
+  - secretKey: sshPublicKey
+    remoteRef:
+      key: {{ default "secret/data/hub/ssh" .sshKeyPath }}
+      property: publickey
+  - secretKey: sshPrivateKey
+    remoteRef:
+      key: {{ default "secret/data/hub/ssh" .sshKeyPath }}
+      property: privatekey
+  refreshInterval: 24h0m0s
+  secretStoreRef: 
+    name: {{ $.Values.secretStore.name }}
+    kind: {{ $.Values.secretStore.kind }}
+  target:
+    name: {{ .name }}-infra-creds
+    creationPolicy: Owner
+    template:
+      type: Opaque
+      metadata:
+        labels:
+          cluster.open-cluster-management.io/credentials: ""
+          cluster.open-cluster-management.io/type: aws
+      data:
+        baseDomain: "{{ .provider.baseDomain }}"
+        pullSecret: |-
+          {{ "{{ .openshiftPullSecret | toString }}" }}
+        ssh-privatekey: |-
+          {{ "{{ .awsKeyId | toString }}" }}
+        ssh-publickey: |-
+          {{ "{{ .awsAccessKey | toString }}" }}
+        ssh-privatekey: |-
+          {{ "{{ .sshPrivateKey | toString }}" }}
+        ssh-publickey: |-
+          {{ "{{ .sshPublicKey | toString }}" }}
+        httpProxy: ""
+        httpsProxy: ""
+        noProxy: ""
+        additionalTrustBundle: ""
+{{- end }}
+{{- end }}
+
+  
