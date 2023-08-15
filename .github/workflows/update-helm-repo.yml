@@ -29,3 +29,4 @@ jobs:
     needs: [helmlint]
     uses: validatedpatterns/helm-charts/.github/workflows/update-helm-repo.yml@main
     permissions: read-all
+    secrets: inherit
