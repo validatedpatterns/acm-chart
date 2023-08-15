@@ -28,6 +28,4 @@ jobs:
   update-helm-repo:
     needs: [helmlint]
     uses: validatedpatterns/helm-charts/.github/workflows/update-helm-repo.yml@main
-    permissions:
-      id-token: write
-      contents: read
+    permissions: read-all
