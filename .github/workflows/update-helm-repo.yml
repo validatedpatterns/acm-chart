@@ -1,8 +1,5 @@
-# Note this workflow is only maintained in this repo
-# It should be invoked from each chart's repo
-#
 # This invokes the workflow named 'publish-charts' in the umbrella repo
-# It expects to have a secret called UMBRELLA_REPO_PAT which contains
+# It expects to have a secret called CHARTS_REPOS_TOKEN which contains
 # the GitHub token that has permissions to invoke workflows and commit code
 # inside the umbrella-repo.
 # The following fine-grained permissions were used in testing and were limited
@@ -27,8 +24,6 @@ jobs:
 
   update-helm-repo:
     needs: [helmlint]
-    runs-on: ubuntu-latest
     uses: validatedpatterns/helm-charts/.github/workflows/update-helm-repo.yml@main
-    permissions:
-      id-token: write
-      contents: read
+    permissions: read-all
+    secrets: inherit
