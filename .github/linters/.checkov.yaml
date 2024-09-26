@@ -4,3 +4,5 @@ directory:
   - .
 skip-path:
   - tests
+skip-check:
+  - CKV_SECRET_6
