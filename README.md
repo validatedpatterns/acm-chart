@@ -10,7 +10,7 @@ This chart is used by the Validated Patterns to configure ACM and manage remote 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| acm.mce_operator | object | `{"channel":null,"source":"redhat-operators"}` | Just used for IIB testing, drives the source and channel for the MCE subscription triggered by ACM |
+| acm.mce_operator | object | Uses the official redhat sources | Just used for IIB testing, drives the source and channel for the MCE subscription triggered by ACM |
 | clusterGroup | object | depends on the individual settings | Dictionary of all the clustergroups of the pattern |
 | clusterGroup.managedClusterGroups | object | `{}` | The set of cluters managed by ACM which is running inside this clusterGroup |
 | clusterGroup.subscriptions | object | `{"acm":{"source":"redhat-operators"}}` | Dictionary of subscriptions for this specific clusterGroup |
@@ -23,7 +23,7 @@ This chart is used by the Validated Patterns to configure ACM and manage remote 
 | global.secretStore.backend | string | `"vault"` |  |
 | global.targetRevision | string | `"main"` | The branch or Git reference to use to deploy the pattern |
 | main.gitops.channel | string | `"gitops-1.13"` | Default gitops channel to install on remote clusters |
-| secretStore | object | `{"kind":"ClusterSecretStore","name":"vault-backend"}` | Default secretstore configuration variables |
+| secretStore | object | depends on the individual settings | Default secretstore configuration variables |
 | secretStore.name | string | `"vault-backend"` | Name of the clustersecretstore to be used for secrets |
 
 ----------------------------------------------
