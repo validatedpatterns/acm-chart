@@ -1,22 +1,32 @@
 main:
   gitops:
+    # -- Default gitops channel to install on remote clusters
     channel: "gitops-1.13"
 
 global:
+  # -- List of additional value files to be passed to the pattern
   extraValueFiles: []
   pattern: none
+  # -- Repository URL pointing to the pattern
   repoURL: none
+    # -- The branch or Git reference to use to deploy the pattern
   targetRevision: main
   options:
     applicationRetryLimit: 20
   secretStore:
     backend: "vault"
 
+# -- Dictionary of all the clustergroups of the pattern
+# @default -- depends on the individual settings
 clusterGroup:
+  # -- Dictionary of subscriptions for this specific clusterGroup
   subscriptions:
+    # -- Name of the subscription
     acm:
+      # -- The catalog source for this subscription
       source: redhat-operators
-  managedClusterGroups:
+  # -- The set of cluters managed by ACM which is running inside this clusterGroup
+  managedClusterGroups: {}
 #    testRegion:
 #      name: region-one
 #      clusterPools:
@@ -48,14 +58,14 @@ clusterGroup:
 #          value: region-two
 
 acm:
-  # Just used for IIB testing, drives the source and channel for the MCE
-  # subscription triggered by ACM
+  # -- Just used for IIB testing, drives the source and channel for the MCE subscription triggered by ACM
   mce_operator:
     source: redhat-operators
     channel: null
 
 
-
+# -- Default secretstore configuration variables
 secretStore:
+  # -- Name of the clustersecretstore to be used for secrets
   name: vault-backend
   kind: ClusterSecretStore

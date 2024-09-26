@@ -1,0 +1,44 @@
+suite: Test multicluster with default values
+templates:
+  - templates/multiclusterhub.yaml
+release:
+  name: release-test
+tests:
+  - it: Should output default values
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: MultiClusterHub
+      - containsDocument:
+          kind: MultiClusterHub
+          apiVersion: operator.open-cluster-management.io/v1
+          name: multiclusterhub
+          namespace: open-cluster-management
+      - equal:
+          path: metadata.annotations["argocd.argoproj.io/sync-wave"]
+          value: "-1"
+      - equal:
+          path: metadata.annotations["installer.open-cluster-management.io/mce-subscription-spec"]
+          value: '{"source": "redhat-operators" }'
+
+  - it: Should change the source when specified
+    set:
+      acm:
+        mce_operator:
+          source: foo-source
+    asserts:
+      - equal:
+          path: metadata.annotations["installer.open-cluster-management.io/mce-subscription-spec"]
+          value: '{"source": "foo-source" }'
+
+  - it: Should change the source and channel when specified
+    set:
+      acm:
+        mce_operator:
+          source: foo-source
+          channel: foo-channel
+    asserts:
+      - equal:
+          path: metadata.annotations["installer.open-cluster-management.io/mce-subscription-spec"]
+          value: '{"source": "foo-source","channel": "foo-channel" }'
