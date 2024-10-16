@@ -196,11 +196,12 @@ spec:
                     route:
                       enabled: false
                   rbac:
-                    defaultPolicy: ""
+                    defaultPolicy: role:readonly
                     policy: |-
                       g, system:cluster-admins, role:admin
                       g, cluster-admins, role:admin
-                    scopes: '[groups]'
+                      g, admin, role:admin
+                    scopes: '[groups,email]'
                   redis:
                     resources:
                       limits:
