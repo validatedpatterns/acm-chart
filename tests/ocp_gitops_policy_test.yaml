@@ -1,0 +1,23 @@
+suite: Test openshift-gitops installation policy
+templates:
+  - templates/policies/ocp-gitops-policy.yaml
+release:
+  name: release-test
+tests:
+  - it: Should output default values
+    asserts:
+      - hasDocuments:
+          count: 6
+
+  - it: Should change the channel when specified
+    set:
+      main:
+        gitops:
+          channel: gitops-9.9.9
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: openshift-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.channel
+          value: gitops-9.9.9
