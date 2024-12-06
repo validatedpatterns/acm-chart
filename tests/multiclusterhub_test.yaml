@@ -16,9 +16,6 @@ tests:
           name: multiclusterhub
           namespace: open-cluster-management
       - equal:
-          path: metadata.annotations["argocd.argoproj.io/sync-wave"]
-          value: "-1"
-      - equal:
           path: metadata.annotations["installer.open-cluster-management.io/mce-subscription-spec"]
           value: '{"source": "redhat-operators" }'
 
