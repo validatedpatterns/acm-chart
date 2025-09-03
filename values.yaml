@@ -1,7 +1,7 @@
 main:
   gitops:
     # -- Default gitops channel to install on remote clusters
-    channel: "gitops-1.15"
+    channel: "gitops-1.17"
 
 global:
   # -- List of additional value files to be passed to the pattern

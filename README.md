@@ -1,6 +1,6 @@
 # acm
 
-![Version: 0.1.6](https://img.shields.io/badge/Version-0.1.6-informational?style=flat-square)
+![Version: 0.1.7](https://img.shields.io/badge/Version-0.1.7-informational?style=flat-square)
 
 A Helm chart to configure Advanced Cluster Manager for OpenShift.
 
@@ -22,7 +22,7 @@ This chart is used by the Validated Patterns to configure ACM and manage remote 
 | global.repoURL | string | `"none"` | Repository URL pointing to the pattern |
 | global.secretStore.backend | string | `"vault"` |  |
 | global.targetRevision | string | `"main"` | The branch or Git reference to use to deploy the pattern |
-| main.gitops.channel | string | `"gitops-1.15"` | Default gitops channel to install on remote clusters |
+| main.gitops.channel | string | `"gitops-1.17"` | Default gitops channel to install on remote clusters |
 | secretStore | object | depends on the individual settings | Default secretstore configuration variables |
 | secretStore.name | string | `"vault-backend"` | Name of the clustersecretstore to be used for secrets |
 
