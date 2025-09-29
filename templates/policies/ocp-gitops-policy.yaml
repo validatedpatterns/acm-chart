@@ -1,7 +1,9 @@
+{{- range .Values.clusterGroup.managedClusterGroups }}
+{{- $group := . }}
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
-  name: openshift-gitops-policy
+  name: {{ .name }}-gitops-policy
   annotations:
     policy.open-cluster-management.io/standards: NIST-CSF
     policy.open-cluster-management.io/categories: PR.DS Data Security
@@ -16,7 +18,7 @@ spec:
         apiVersion: policy.open-cluster-management.io/v1
         kind: ConfigurationPolicy
         metadata:
-          name: openshift-gitops-config
+          name: {{ .name }}-gitops-config
         spec:
           remediationAction: enforce
           severity: medium
@@ -35,10 +37,10 @@ spec:
                   labels:
                     operators.coreos.com/openshift-gitops-operator.openshift-operators: ''
                 spec:
-                  channel: {{ default "gitops-1.15" .Values.main.gitops.channel }}
+                  channel: {{ default "gitops-1.17" $.Values.main.gitops.channel }}
                   installPlanApproval: Automatic
                   name: openshift-gitops-operator
-                  source: {{ default "redhat-operators" .Values.main.gitops.operatorSource }}
+                  source: {{ default "redhat-operators" $.Values.main.gitops.operatorSource }}
                   sourceNamespace: openshift-marketplace
                   config:
                     env:
@@ -57,38 +59,32 @@ spec:
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
 metadata:
-  name: openshift-gitops-placement-binding
+  name: {{ .name }}-gitops-placement-binding
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 placementRef:
-  name: openshift-gitops-placement
+  name: {{ .name }}-gitops-placement
   kind: PlacementRule
   apiGroup: apps.open-cluster-management.io
 subjects:
-  - name: openshift-gitops-policy
+  - name: {{ .name }}-gitops-policy
     kind: Policy
     apiGroup: policy.open-cluster-management.io
 ---
 apiVersion: apps.open-cluster-management.io/v1
 kind: PlacementRule
 metadata:
-  name: openshift-gitops-placement
+  name: {{ .name }}-gitops-placement
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   clusterConditions:
     - status: 'True'
       type: ManagedClusterConditionAvailable
-  clusterSelector:
-    matchExpressions:
-      - key: vendor
-        operator: In
-        values:
-          - OpenShift
-      - key: local-cluster
-        operator: NotIn
-        values:
-          - 'true'
+{{- include "acm.app.clusterSelector" (dict 
+  "clusterSelector" .clusterSelector
+  "group" $group
+  ) | nindent 2 }}
 ---
 # This policy depends on openshift-gitops-policy and the reason is that we need to be
 # certain that the trusted-ca-bundle exists before spawning the clusterwide argocd instance
@@ -97,7 +93,7 @@ spec:
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
-  name: openshift-gitops-policy-argocd
+  name: {{ .name }}-gitops-policy-argocd
   annotations:
     policy.open-cluster-management.io/standards: NIST-CSF
     policy.open-cluster-management.io/categories: PR.DS Data Security
@@ -111,19 +107,19 @@ spec:
     - apiVersion: policy.open-cluster-management.io/v1
       compliance: Compliant
       kind: Policy
-      name: openshift-gitops-policy
+      name: {{ .name }}-gitops-policy
       namespace: open-cluster-management
     - apiVersion: policy.open-cluster-management.io/v1
       compliance: Compliant
       kind: Policy
-      name: hub-argo-ca-openshift-gitops-policy
+      name: hub-argo-ca-{{ .name }}-gitops-policy
       namespace: open-cluster-management
   policy-templates:
     - objectDefinition:
         apiVersion: policy.open-cluster-management.io/v1
         kind: ConfigurationPolicy
         metadata:
-          name: openshift-gitops-config-argocd
+          name: {{ .name }}-gitops-config-argocd
         spec:
           remediationAction: enforce
           severity: medium
@@ -278,10 +274,10 @@ spec:
                         memory: 128Mi
                     route:
                       enabled: true
-                      {{- if and (.Values.global.argocdServer) (.Values.global.argocdServer.route) (.Values.global.argocdServer.route.tls) }}
+                      {{- if and ($.Values.global.argocdServer) ($.Values.global.argocdServer.route) ($.Values.global.argocdServer.route.tls) }}
                       tls:
-                        insecureEdgeTerminationPolicy: {{ default "Redirect" .Values.global.argocdServer.route.tls.insecureEdgeTerminationPolicy }}
-                        termination: {{ default "reencrypt" .Values.global.argocdServer.route.tls.termination }}
+                        insecureEdgeTerminationPolicy: {{ default "Redirect" $.Values.global.argocdServer.route.tls.insecureEdgeTerminationPolicy }}
+                        termination: {{ default "reencrypt" $.Values.global.argocdServer.route.tls.termination }}
                       {{- end }}
                     service:
                       type: ""
@@ -302,35 +298,31 @@ spec:
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
 metadata:
-  name: openshift-gitops-placement-binding-argocd
+  name: {{ .name }}-gitops-placement-binding-argocd
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 placementRef:
-  name: openshift-gitops-placement-argocd
+  name: {{ .name }}-gitops-placement-argocd
   kind: PlacementRule
   apiGroup: apps.open-cluster-management.io
 subjects:
-  - name: openshift-gitops-policy-argocd
+  - name: {{ .name }}-gitops-policy-argocd
     kind: Policy
     apiGroup: policy.open-cluster-management.io
 ---
 apiVersion: apps.open-cluster-management.io/v1
 kind: PlacementRule
 metadata:
-  name: openshift-gitops-placement-argocd
+  name: {{ .name }}-gitops-placement-argocd
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   clusterConditions:
     - status: 'True'
       type: ManagedClusterConditionAvailable
-  clusterSelector:
-    matchExpressions:
-      - key: vendor
-        operator: In
-        values:
-          - OpenShift
-      - key: local-cluster
-        operator: NotIn
-        values:
-          - 'true'
+{{- include "acm.app.clusterSelector" (dict 
+  "clusterSelector" .clusterSelector
+  "group" $group
+  ) | nindent 2 }}
+---
+{{- end }}

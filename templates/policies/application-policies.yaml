@@ -156,22 +156,9 @@ spec:
   clusterConditions:
     - status: 'True'
       type: ManagedClusterConditionAvailable
-  {{- if .clusterSelector }}
-  clusterSelector: {{ .clusterSelector | toPrettyJson }}
-  {{- else if (not $group.acmlabels) }}
-  clusterSelector:
-    matchLabels:
-      clusterGroup: {{ $group.name }}
-  {{- else if eq (len $group.acmlabels) 0 }}
-  clusterSelector:
-    matchLabels:
-      clusterGroup: {{ $group.name }}
-  {{- else }}
-  clusterSelector:
-    matchLabels:
-    {{- range .acmlabels }}
-      {{ .name }}: {{ .value }}
-    {{- end }}
-  {{- end }}
+{{- include "acm.app.clusterSelector" (dict 
+  "clusterSelector" .clusterSelector
+  "group" $group
+  ) | nindent 2 }}
 ---
 {{- end }}

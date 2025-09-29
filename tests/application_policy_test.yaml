@@ -1,0 +1,89 @@
+
+suite: Test argo application installation policy
+templates:
+  - templates/policies/application-policies.yaml
+release:
+  name: release-test
+tests:
+
+  - it: Should render the clusterselector when using acmlabels
+    values:
+      - ./clusterselector_values.yaml
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-placement
+        equal:
+          path: spec.clusterSelector.matchLabels.clusterGroup
+          value: group-one
+
+  - it: Should render the clusterselector when using acmlabels with an override
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          exampleRegion:
+            name: group-two
+            acmlabels:
+              - name: clusterGroup
+                value: group-two
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-two-placement
+        equal:
+          path: spec.clusterSelector.matchLabels.clusterGroup
+          value: group-two
+
+  - it: Should render the clusterselector when using json
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          exampleRegion:
+            clusterSelector:
+              foo: bar
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-placement
+        equal:
+          path: spec.clusterSelector
+          value: {foo: bar}
+
+  - it: Should render the clusterselector when acmlabels is empty
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          exampleRegion:
+            name: group-two
+            acmlabels: {}
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-two-placement
+        equal:
+          path: spec.clusterSelector.matchLabels.clusterGroup
+          value: group-two
+
+  - it: Should render the clusterselector when acmlabels is unset
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          exampleRegion:
+            name: group-two
+            acmlabels: nil
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-two-placement
+        equal:
+          path: spec.clusterSelector.matchLabels.clusterGroup
+          value: group-two
+
