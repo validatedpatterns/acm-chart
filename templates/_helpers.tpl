@@ -45,7 +45,7 @@ Default always defined valueFiles to be included when pushing the cluster wide a
 - name: global.localClusterName
   value: '{{ `{{ (split "." (lookup "config.openshift.io/v1" "Ingress" "" "cluster").spec.domain)._1 }}` }}'
 - name: global.clusterPlatform
-  value: {{ $.Values.global.clusterPlatform }}
+  value: '{{ `{{ (lookup "config.openshift.io/v1" "Infrastructure" "" "cluster").spec.platformSpec.type }}` }}'
 - name: global.multiSourceSupport
   value: {{ $.Values.global.multiSourceSupport | quote }}
 - name: global.multiSourceRepoUrl
