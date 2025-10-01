@@ -5,11 +5,15 @@ release:
   name: release-test
 tests:
   - it: Should output default values
+    values:
+      - ./clusterselector_values.yaml
     asserts:
       - hasDocuments:
           count: 6
 
   - it: Should change the channel when specified
+    values:
+      - ./clusterselector_values.yaml
     set:
       main:
         gitops:
@@ -17,7 +21,7 @@ tests:
     asserts:
       - documentSelector:
           path: metadata.name
-          value: openshift-gitops-policy
+          value: group-one-gitops-policy
         equal:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.channel
           value: gitops-9.9.9

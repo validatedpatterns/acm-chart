@@ -57,3 +57,55 @@ Default always defined valueFiles to be included when pushing the cluster wide a
 - name: global.experimentalCapabilities
   value: {{ $.Values.global.experimentalCapabilities }}
 {{- end }} {{- /*acm.app.policies.helmparameters */}}
+
+{{- define "acm.app.clusterSelector" -}}
+{{- $cs := .clusterSelector -}}
+{{- $g  := default (dict) .group -}}
+{{- $rawLabels := get $g "acmlabels" -}}
+{{- $isSlice := kindIs "slice" $rawLabels -}}
+{{- $isMap   := kindIs "map"   $rawLabels -}}
+{{- $hasAny  := and $rawLabels (gt (len $rawLabels) 0) -}}
+{{- if $cs -}}
+clusterSelector: {{ $cs | toPrettyJson }}
+{{- else if not $hasAny -}}
+clusterSelector:
+  matchExpressions:
+    - key: local-cluster
+      operator: NotIn
+      values:
+        - 'true'
+  matchLabels:
+    clusterGroup: {{ $g.name }}
+{{- else if $isSlice -}}
+clusterSelector:
+  matchExpressions:
+    - key: local-cluster
+      operator: NotIn
+      values:
+        - 'true'
+  matchLabels:
+{{- range $rawLabels }}
+    {{ .name }}: {{ .value }}
+{{- end }}
+{{- else if $isMap -}}
+clusterSelector:
+  matchExpressions:
+    - key: local-cluster
+      operator: NotIn
+      values:
+        - 'true'
+  matchLabels:
+{{- range $k, $v := $rawLabels }}
+    {{ $k }}: {{ $v }}
+{{- end }}
+{{- else -}} {{- /* Fallback: unknown acmlabels shape then default to group */}}
+clusterSelector:
+  matchExpressions:
+    - key: local-cluster
+      operator: NotIn
+      values:
+        - 'true'
+  matchLabels:
+    clusterGroup: {{ $g.name }}
+{{- end -}}
+{{- end -}} {{- /*acm.app.clusterSelector */}}
