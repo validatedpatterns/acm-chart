@@ -89,9 +89,11 @@ spec:
         spec:
           remediationAction: enforce
           severity: medium
+          # Here we need to put any namespace that might be rendered in the template
           namespaceSelector:
             include:
-              - default
+              - external-secrets
+              - golang-external-secrets
           object-templates:
             - complianceType: mustonlyhave
               objectDefinition:
@@ -100,7 +102,7 @@ spec:
                 type: Opaque
                 metadata:
                   name: hub-ca
-                  namespace: golang-external-secrets
+                  namespace: '{{ `{{ if (lookup "v1" "Namespace" "" "external-secrets-operator") }}external-secrets{{ else }}golang-external-secrets{{ end }}` }}'
                 data:
                   hub-kube-root-ca.crt: '{{ `{{hub fromConfigMap "" "kube-root-ca.crt" "ca.crt" | base64enc hub}}` }}'
                   hub-openshift-service-ca.crt: '{{ `{{hub fromConfigMap "" "openshift-service-ca.crt" "service-ca.crt" | base64enc hub}}` }}'
