@@ -1,6 +1,6 @@
 # acm
 
-![Version: 0.1.9](https://img.shields.io/badge/Version-0.1.9-informational?style=flat-square)
+![Version: 0.1.10](https://img.shields.io/badge/Version-0.1.10-informational?style=flat-square)
 
 A Helm chart to configure Advanced Cluster Manager for OpenShift.
 
