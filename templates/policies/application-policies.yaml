@@ -74,7 +74,6 @@ spec:
                           path: {{ .path }}
                         {{- end }}
                        {{- end }}
-
                   {{- else }}
                   source:
                     repoURL: {{ coalesce .repoURL $.Values.global.repoURL }}
