@@ -56,6 +56,8 @@ Default always defined valueFiles to be included when pushing the cluster wide a
   value: {{ $.Values.global.privateRepo | quote }}
 - name: global.experimentalCapabilities
   value: {{ $.Values.global.experimentalCapabilities }}
+- name: global.deletePattern
+  value: {{ $.Values.global.deletePattern | quote }}
 {{- end }} {{- /*acm.app.policies.helmparameters */}}
 
 {{- define "acm.app.clusterSelector" -}}
