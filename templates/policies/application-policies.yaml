@@ -129,7 +129,11 @@ spec:
                     namespace: {{ $.Values.global.pattern }}-{{ .name }}
                   syncPolicy:
                     automated:
+                    {{- if eq ($.Values.global.deletePattern | default "0" | int) 1 }}
+                      prune: true
+                    {{- else }}
                       prune: false
+                    {{- end }}
                       selfHeal: true
                     retry:
                       limit: {{ default 20 $.Values.global.options.applicationRetryLimit }}
