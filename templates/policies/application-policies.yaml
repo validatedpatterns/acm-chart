@@ -1,6 +1,7 @@
 # TODO: Also create a GitOpsCluster.apps.open-cluster-management.io
 {{- range .Values.clusterGroup.managedClusterGroups }}
 {{- $group := . }}
+{{- if ne ($.Values.global.deletePattern | default "0" | int) 0 }}
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
@@ -18,6 +19,7 @@ spec:
         metadata:
           name: {{ .name }}-clustergroup-config
         spec:
+          pruneObjectBehavior: DeleteIfCreated
           remediationAction: enforce
           severity: medium
           namespaceSelector:
@@ -177,4 +179,5 @@ spec:
   "group" $group
   ) | nindent 2 }}
 ---
+{{- end }}
 {{- end }}
