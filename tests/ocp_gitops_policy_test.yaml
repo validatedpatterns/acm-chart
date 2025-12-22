@@ -11,12 +11,12 @@ tests:
       - hasDocuments:
           count: 6
 
-  - it: Should change the channel when specified
+  - it: Should change the channel when specified (legacy test updated to use spokeGitops)
     values:
       - ./clusterselector_values.yaml
     set:
-      main:
-        gitops:
+      acm:
+        spokeGitops:
           channel: gitops-9.9.9
     asserts:
       - documentSelector:
@@ -25,3 +25,73 @@ tests:
         equal:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.channel
           value: gitops-9.9.9
+
+  - it: Should use spokeGitops channel when specified
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      acm:
+        spokeGitops:
+          channel: gitops-2.0.0
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.channel
+          value: gitops-2.0.0
+
+  - it: Should use spokeGitops source when specified
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      acm:
+        spokeGitops:
+          source: custom-operators
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.source
+          value: custom-operators
+
+  - it: Should use spokeGitops channel and source when both specified
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      acm:
+        spokeGitops:
+          channel: gitops-2.1.0
+          source: my-custom-catalog
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.channel
+          value: gitops-2.1.0
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.source
+          value: my-custom-catalog
+
+  - it: Should prioritize spokeGitops over main gitops settings
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      main:
+        gitops:
+          channel: gitops-fallback
+      acm:
+        spokeGitops:
+          channel: gitops-priority
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.channel
+          value: gitops-priority

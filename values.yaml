@@ -1,6 +1,7 @@
+# -- Deprecated: Use acm.spokeGitops which takes precedence
 main:
   gitops:
-    # -- Default gitops channel to install on remote clusters
+    # -- DEPRECATED: Default gitops channel to install on remote clusters (Use acm.spokeGitops.channel)
     channel: "gitops-1.18"
 
 global:
@@ -63,6 +64,12 @@ acm:
   mce_operator:
     source: redhat-operators
     channel: null
+
+  # @default -- Uses the official redhat source and some default channel
+  spokeGitops:
+    source: redhat-operators
+    # -- Default gitops channel to install on remote clusters
+    channel: "gitops-1.18"
 
 
 # -- Default secretstore configuration variables
