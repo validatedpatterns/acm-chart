@@ -37,10 +37,10 @@ spec:
                   labels:
                     operators.coreos.com/openshift-gitops-operator.openshift-operators: ''
                 spec:
-                  channel: {{ default "gitops-1.17" $.Values.main.gitops.channel }}
+                  channel: {{- if and $.Values.acm.spokeGitops $.Values.acm.spokeGitops.channel }} {{ $.Values.acm.spokeGitops.channel }}{{- else if and $.Values.main $.Values.main.gitops $.Values.main.gitops.channel }} {{ $.Values.main.gitops.channel }}{{- else }} gitops-1.18{{- end }}
                   installPlanApproval: Automatic
                   name: openshift-gitops-operator
-                  source: {{ default "redhat-operators" $.Values.main.gitops.operatorSource }}
+                  source: {{- if and $.Values.acm.spokeGitops $.Values.acm.spokeGitops.source }} {{ $.Values.acm.spokeGitops.source }}{{- else if and $.Values.main $.Values.main.gitops $.Values.main.gitops.operatorSource }} {{ $.Values.main.gitops.operatorSource }}{{- else }} redhat-operators{{- end }}
                   sourceNamespace: openshift-marketplace
                   config:
                     env:
