@@ -1,7 +1,8 @@
 # TODO: Also create a GitOpsCluster.apps.open-cluster-management.io
 {{- range .Values.clusterGroup.managedClusterGroups }}
 {{- $group := . }}
-{{- if ne ($.Values.global.deletePattern | default "0" | int) 0 }}
+{{- if ($.Values.global.deletePattern | eq "DeleteSpoke" ) }}
+{{- else }}
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
@@ -131,7 +132,7 @@ spec:
                     namespace: {{ $.Values.global.pattern }}-{{ .name }}
                   syncPolicy:
                     automated:
-                    {{- if eq ($.Values.global.deletePattern | default "0" | int) 1 }}
+                    {{- if ($.Values.global.deletePattern | ne "none" ) }}
                       prune: true
                     {{- else }}
                       prune: false
