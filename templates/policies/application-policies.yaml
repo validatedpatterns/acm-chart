@@ -40,9 +40,22 @@ spec:
                     - repoURL: {{ coalesce .repoURL $.Values.global.repoURL }}
                       targetRevision: {{ coalesce .targetRevision $.Values.global.targetRevision }}
                       ref: patternref
-                    - repoURL: {{ $.Values.global.multiSourceRepoUrl }}
-                      targetRevision: {{ $.Values.global.multiSourceTargetRevision }}
+                      {{/* If we're using the clustergroup chart from a git repo let's use those */}}
+                      {{- $clusterGroupGitRepoUrl := "" }}
+                      {{- if and $.Values.main $.Values.main.multiSourceConfig }}
+                        {{- $clusterGroupGitRepoUrl = $.Values.main.multiSourceConfig.clusterGroupGitRepoUrl }}
+                      {{- end }}
+                      {{- $clusterGroupChartGitRevision := "" }}
+                      {{- if and $.Values.main $.Values.main.multiSourceConfig }}
+                        {{- $clusterGroupChartGitRevision = $.Values.main.multiSourceConfig.clusterGroupChartGitRevision }}
+                      {{- end }}
+                    - repoURL: {{ coalesce $clusterGroupGitRepoUrl $.Values.global.multiSourceRepoUrl }}
+                      targetRevision: {{ coalesce $clusterGroupChartGitRevision $.Values.global.multiSourceTargetRevision }}
+                      {{- if and $.Values.main $.Values.main.multiSourceConfig (hasKey $.Values.main.multiSourceConfig "clusterGroupGitRepoUrl") }}
+                      path: "."
+                      {{- else }}
                       chart: clustergroup
+                      {{- end }}
                       helm:
                         ignoreMissingValueFiles: true
                         values: |
