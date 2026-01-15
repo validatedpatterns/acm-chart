@@ -87,3 +87,153 @@ tests:
           path: spec.clusterSelector.matchLabels.clusterGroup
           value: group-two
 
+  # Tests for clusterGroupGitRepoUrl and clusterGroupChartGitRevision
+  - it: Should use chart clustergroup when clusterGroupGitRepoUrl is not set
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].chart
+          value: clustergroup
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].repoURL
+          value: "https://charts.example.com"
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].targetRevision
+          value: "0.1.0"
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        isNull:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].path
+
+  - it: Should use path when clusterGroupGitRepoUrl is set
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+        clusterGroupGitRepoUrl: "https://github.com/example/clustergroup-chart"
+        clusterGroupChartGitRevision: "feature-branch"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].path
+          value: "."
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].repoURL
+          value: "https://github.com/example/clustergroup-chart"
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].targetRevision
+          value: "feature-branch"
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        isNull:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].chart
+
+  - it: Should pass clusterGroupGitRepoUrl as helm parameter when set
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+        clusterGroupGitRepoUrl: "https://github.com/example/clustergroup-chart"
+        clusterGroupChartGitRevision: "feature-branch"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        contains:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters
+          content:
+            name: global.clusterGroupGitRepoUrl
+            value: "https://github.com/example/clustergroup-chart"
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        contains:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters
+          content:
+            name: global.clusterGroupChartGitRevision
+            value: "feature-branch"
+
+  - it: Should not pass clusterGroupGitRepoUrl helm parameter when not set
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        notContains:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters
+          content:
+            name: global.clusterGroupGitRepoUrl
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        notContains:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters
+          content:
+            name: global.clusterGroupChartGitRevision
+
+  - it: Should use clusterGroupGitRepoUrl with fallback to multiSourceTargetRevision when only clusterGroupGitRepoUrl is set
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+        clusterGroupGitRepoUrl: "https://github.com/example/clustergroup-chart"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].path
+          value: "."
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].repoURL
+          value: "https://github.com/example/clustergroup-chart"
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].targetRevision
+          value: "0.1.0"
+
