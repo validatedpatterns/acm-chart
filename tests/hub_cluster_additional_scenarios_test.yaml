@@ -1,0 +1,140 @@
+suite: Test Hub Cluster Detection Additional Scenarios
+templates:
+  - templates/policies/acm-hub-ca-policy.yaml
+release:
+  name: release-test
+tests:
+  # Test subdomain variations (domain-based detection)
+  - it: should differentiate between similar domains
+    set:
+      global:
+        repoURL: https://github.com/test/repo
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub-spoke.example.com"  # Similar but different
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: null  # Explicitly unset to enable domain-based detection
+        managedClusterGroups:
+          test:
+            name: test-cluster
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # Test with special characters (domain-based detection)
+  - it: should handle domains with special characters
+    set:
+      global:
+        repoURL: https://github.com/test/repo
+        hubClusterDomain: "apps.hub-cluster_1.example-domain.com"
+        localClusterDomain: "apps.hub-cluster_1.example-domain.com"
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: null  # Explicitly unset to enable domain-based detection
+        managedClusterGroups:
+          test:
+            name: test-cluster
+    asserts:
+      - hasDocuments:
+          count: 9
+
+  # Test with missing managedClusterGroups
+  - it: should handle missing managedClusterGroups gracefully
+    set:
+      global:
+        repoURL: https://github.com/test/repo
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub.example.com"
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: null  # Explicitly unset to enable domain-based detection
+        managedClusterGroups: null  # Explicitly unset
+    asserts:
+      - hasDocuments:
+          count: 0  # No managed cluster groups means no policies
+
+  # Test with empty managedClusterGroups
+  - it: should handle empty managedClusterGroups
+    set:
+      global:
+        repoURL: https://github.com/test/repo
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub.example.com"
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: null  # Explicitly unset to enable domain-based detection
+        managedClusterGroups: {}  # Empty
+    asserts:
+      - hasDocuments:
+          count: 0  # Empty managed cluster groups means no policies
+
+  # Test explicit isHubCluster takes precedence over domain-based detection
+  - it: should respect explicit isHubCluster even when domains match
+    set:
+      global:
+        repoURL: https://github.com/test/migration
+        hubClusterDomain: "apps.migration-hub.example.com"
+        localClusterDomain: "apps.migration-hub.example.com"
+        secretStore:
+          backend: "vault"
+        pattern: "migration-test"
+      clusterGroup:
+        # Explicit isHubCluster takes precedence over domain-based detection
+        isHubCluster: false  # Explicitly set to false, should be respected
+        managedClusterGroups:
+          migrationTarget:
+            name: migration-target
+            labels:
+            - name: migration
+              value: in-progress
+    asserts:
+      # Explicit isHubCluster: false is respected even though domains match
+      - hasDocuments:
+          count: 0
+
+  # Test multiple cluster groups with domain-based logic (no explicit isHubCluster)
+  - it: should handle multiple cluster groups with domain-based hub detection
+    set:
+      global:
+        repoURL: https://github.com/test/multi-cluster
+        hubClusterDomain: "apps.prod-hub.company.com"
+        localClusterDomain: "apps.prod-hub.company.com"
+        secretStore:
+          backend: "vault"
+        pattern: "multi-cluster-test"
+      clusterGroup:
+        isHubCluster: null  # Explicitly unset to enable domain-based detection
+        managedClusterGroups:
+          prodEast:
+            name: prod-east
+            labels:
+            - name: environment
+              value: production
+          stagingWest:
+            name: staging-west
+            labels:
+            - name: environment
+              value: staging
+    asserts:
+      # Should have CA policies for 2 cluster groups (9 docs each)
+      - hasDocuments:
+          count: 18
+      # Verify specific policies exist
+      - documentSelector:
+          path: metadata.name
+          value: hub-argo-ca-prod-east-policy
+        isKind:
+          of: Policy
+      - documentSelector:
+          path: metadata.name
+          value: hub-argo-ca-staging-west-policy
+        isKind:
+          of: Policy
