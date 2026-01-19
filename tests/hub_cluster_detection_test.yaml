@@ -1,0 +1,155 @@
+suite: Test Hub Cluster Detection Logic
+templates:
+  - templates/policies/acm-hub-ca-policy.yaml
+release:
+  name: release-test
+tests:
+  # Test 1: Hub cluster when localClusterDomain equals hubClusterDomain
+  - it: should render acm hub ca policy when localClusterDomain equals hubClusterDomain
+    set:
+      global:
+        repoURL: https://github.com/validatedpatterns/multicloud-gitops
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub.example.com"
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: null  # Explicitly unset to enable domain-based detection
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: hub-argo-ca-region-one-policy
+        isKind:
+          of: Policy
+      - hasDocuments:
+          count: 9
+
+  # Test 2: Not hub cluster when localClusterDomain differs from hubClusterDomain
+  - it: should not render acm hub ca policy when localClusterDomain differs from hubClusterDomain
+    set:
+      global:
+        repoURL: https://github.com/validatedpatterns/multicloud-gitops
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.spoke.example.com"
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: null  # Explicitly unset to enable domain-based detection
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # Test 3: Hub cluster when localClusterDomain is unset (defaults to hubClusterDomain)
+  - it: should render acm hub ca policy when localClusterDomain is unset (defaults to hubClusterDomain)
+    set:
+      global:
+        repoURL: https://github.com/validatedpatterns/multicloud-gitops
+        hubClusterDomain: "apps.hub.example.com"
+        # localClusterDomain is intentionally not set
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: null  # Explicitly unset to enable domain-based detection
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: hub-argo-ca-region-one-policy
+        isKind:
+          of: Policy
+      - hasDocuments:
+          count: 9
+
+  # Test 4: Explicit isHubCluster true takes precedence when set
+  - it: should use explicit isHubCluster true when no domain configuration is provided
+    set:
+      global:
+        repoURL: https://github.com/validatedpatterns/multicloud-gitops
+        # No domain configuration provided
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: true  # Explicit setting takes precedence
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: hub-argo-ca-region-one-policy
+        isKind:
+          of: Policy
+      - hasDocuments:
+          count: 9
+
+  # Test 5: Explicit isHubCluster false takes precedence when set
+  - it: should use explicit isHubCluster false when no domain configuration is provided
+    set:
+      global:
+        repoURL: https://github.com/validatedpatterns/multicloud-gitops
+        # No domain configuration provided
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: false  # Explicit setting takes precedence
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # Test 6: Hub cluster detection with only hubClusterDomain set (no explicit isHubCluster)
+  - it: should detect hub cluster when only hubClusterDomain is provided
+    set:
+      global:
+        repoURL: https://github.com/validatedpatterns/multicloud-gitops
+        hubClusterDomain: "apps.hub.example.com"
+        # localClusterDomain intentionally not set, should default to hubClusterDomain
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: null  # Explicitly unset to enable domain-based detection
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: hub-argo-ca-region-one-policy
+        isKind:
+          of: Policy
+      - hasDocuments:
+          count: 9

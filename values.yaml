@@ -20,6 +20,10 @@ global:
 # -- Dictionary of all the clustergroups of the pattern
 # @default -- depends on the individual settings
 clusterGroup:
+  # DEPRECATED: isHubCluster is deprecated. Use global.localClusterDomain and global.hubClusterDomain instead.
+  # When both domain values are set, hub cluster detection will be based on whether they are equal.
+  # This field is kept for backwards compatibility when domain values are not set.
+  # isHubCluster: true
   # -- Dictionary of subscriptions for this specific clusterGroup
   subscriptions:
     # -- Name of the subscription
