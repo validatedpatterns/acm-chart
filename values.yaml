@@ -63,7 +63,7 @@ clusterGroup:
 #          value: region-two
 
 acm:
-  # @default -- MultiClusterHub spec (empty by default)
+  # -- MultiClusterHub spec (empty by default)
   mch_spec: {}
 
   # -- Just used for IIB testing, drives the source and channel for the MCE subscription triggered by ACM

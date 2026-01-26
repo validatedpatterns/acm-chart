@@ -11,6 +11,7 @@ This chart is used by the Validated Patterns to configure ACM and manage remote 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | acm.mce_operator | object | Uses the official redhat sources | Just used for IIB testing, drives the source and channel for the MCE subscription triggered by ACM |
+| acm.mch_spec | object | `{}` | MultiClusterHub spec (empty by default) |
 | acm.spokeGitops.channel | string | `"gitops-1.18"` | Default gitops channel to install on remote clusters |
 | acm.spokeGitops.source | string | `"redhat-operators"` |  |
 | clusterGroup | object | depends on the individual settings | Dictionary of all the clustergroups of the pattern |
