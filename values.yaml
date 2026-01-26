@@ -63,6 +63,9 @@ clusterGroup:
 #          value: region-two
 
 acm:
+  # @default -- MultiClusterHub spec (empty by default)
+  mch_spec: {}
+
   # -- Just used for IIB testing, drives the source and channel for the MCE subscription triggered by ACM
   # @default -- Uses the official redhat sources
   mce_operator:

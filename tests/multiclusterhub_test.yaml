@@ -42,3 +42,39 @@ tests:
       - equal:
           path: metadata.annotations["installer.open-cluster-management.io/mce-subscription-spec"]
           value: '{"source": "foo-source","channel": "foo-channel" }'
+
+  - it: Should have empty spec by default
+    asserts:
+      - equal:
+          path: spec
+          value: {}
+
+  - it: Should set custom spec when mch_spec is provided
+    set:
+      acm:
+        mch_spec:
+          disableHubSelfManagement: true
+          availabilityConfig: High
+    asserts:
+      - equal:
+          path: spec.disableHubSelfManagement
+          value: true
+      - equal:
+          path: spec.availabilityConfig
+          value: High
+
+  - it: Should set nested spec properties when mch_spec has nested values
+    set:
+      acm:
+        mch_spec:
+          overrides:
+            components:
+              - name: cluster-backup
+                enabled: true
+    asserts:
+      - equal:
+          path: spec.overrides.components[0].name
+          value: cluster-backup
+      - equal:
+          path: spec.overrides.components[0].enabled
+          value: true
