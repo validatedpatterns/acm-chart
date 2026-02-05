@@ -8,7 +8,6 @@ metadata:
   name: multiclusterhub
   namespace: open-cluster-management
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
     installer.open-cluster-management.io/mce-subscription-spec: '{"source": "{{ default "redhat-operators" .Values.acm.mce_operator.source }}" {{- $channel }} }'
 spec:
 {{ .Values.acm.mch_spec | toYaml | indent 2 }}

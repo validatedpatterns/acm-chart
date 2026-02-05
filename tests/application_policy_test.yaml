@@ -189,3 +189,88 @@ tests:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].targetRevision
           value: "0.1.0"
 
+  - it: should render a spoke app of apps with the correct helm parameters (no deletePattern set)
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+      main:
+        multiSourceConfig:
+          clusterGroupGitRepoUrl: "https://github.com/example/clustergroup-chart"
+          clusterGroupChartGitRevision: "feature-branch"
+    asserts:
+      - hasDocuments:
+          count: 3
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        lengthEqual:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters
+          count: 19 # 17 (in the helper) +2 (1 override, and 1 clusterGroup.name)
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters[16].name
+          value: "global.deletePattern"
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters[16].value
+          value: null
+
+  - it: should render a spoke app of apps with the correct helm parameters (if deletePattern set to DeleteSpokeChildApps)
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+        deletePattern: DeleteSpokeChildApps
+      main:
+        multiSourceConfig:
+          clusterGroupGitRepoUrl: "https://github.com/example/clustergroup-chart"
+          clusterGroupChartGitRevision: "feature-branch"
+    asserts:
+      - hasDocuments:
+          count: 3
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        lengthEqual:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters
+          count: 19 # 17 (in the helper) +2 (1 override, and 1 clusterGroup.name)
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters[16].name
+          value: "global.deletePattern"
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters[16].value
+          value: "DeleteChildApps"
+
+  - it: should not render a spoke app of apps (if deletePattern set to DeleteSpoke)
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+        deletePattern: DeleteSpoke
+      main:
+        multiSourceConfig:
+          clusterGroupGitRepoUrl: "https://github.com/example/clustergroup-chart"
+          clusterGroupChartGitRevision: "feature-branch"
+    asserts:
+      - hasDocuments:
+          count: 0

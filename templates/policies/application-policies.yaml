@@ -1,6 +1,8 @@
 # TODO: Also create a GitOpsCluster.apps.open-cluster-management.io
 {{- range .Values.clusterGroup.managedClusterGroups }}
 {{- $group := . }}
+{{- if ($.Values.global.deletePattern | eq "DeleteSpoke" ) }}
+{{- else }}
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
@@ -18,6 +20,7 @@ spec:
         metadata:
           name: {{ .name }}-clustergroup-config
         spec:
+          pruneObjectBehavior: DeleteIfCreated
           remediationAction: enforce
           severity: medium
           namespaceSelector:
@@ -129,7 +132,11 @@ spec:
                     namespace: {{ $.Values.global.pattern }}-{{ .name }}
                   syncPolicy:
                     automated:
+                    {{- if ($.Values.global.deletePattern | ne "none" ) }}
+                      prune: true
+                    {{- else }}
                       prune: false
+                    {{- end }}
                       selfHeal: true
                     retry:
                       limit: {{ default 20 $.Values.global.options.applicationRetryLimit }}
@@ -173,4 +180,5 @@ spec:
   "group" $group
   ) | nindent 2 }}
 ---
+{{- end }}
 {{- end }}

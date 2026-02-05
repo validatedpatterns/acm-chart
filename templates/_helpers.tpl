@@ -56,6 +56,15 @@ Default always defined valueFiles to be included when pushing the cluster wide a
   value: {{ $.Values.global.privateRepo | quote }}
 - name: global.experimentalCapabilities
   value: {{ $.Values.global.experimentalCapabilities }}
+{{/*
+if this chart gets DeleteSpokeChildApps, it will set deletePattern to DeleteChildApps to remove the child apps from spokes
+*/}}
+- name: global.deletePattern
+  {{- if eq $.Values.global.deletePattern "DeleteSpokeChildApps" }}
+  value: DeleteChildApps
+  {{- else }}
+  value: {{ $.Values.global.deletePattern }}
+  {{- end }}
 {{- end }} {{- /*acm.app.policies.helmparameters */}}
 
 {{- define "acm.app.clusterSelector" -}}
