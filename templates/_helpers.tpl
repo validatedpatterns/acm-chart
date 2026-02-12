@@ -10,6 +10,7 @@ Default always defined valueFiles to be included when pushing the cluster wide a
 # We cannot use $.Values.global.clusterVersion because that gets resolved to the
 # hub's cluster version, whereas we want to include the spoke cluster version
 - '/values-{{ `{{ printf "%d.%d" ((semver (index (lookup "config.openshift.io/v1" "ClusterVersion" "" "version").status.history 0).version).Major) ((semver (index (lookup "config.openshift.io/v1" "ClusterVersion" "" "version").status.history 0).version).Minor) }}` }}-{{ .name }}.yaml'
+- '/values-{{ `{{ (split "." (lookup "config.openshift.io/v1" "Ingress" "" "cluster").spec.domain)._1 }}` }}.yaml'
 {{- end }} {{- /*acm.app.policies.valuefiles */}}
 
 {{- define "acm.app.policies.multisourcevaluefiles" -}}
@@ -21,6 +22,7 @@ Default always defined valueFiles to be included when pushing the cluster wide a
 # We cannot use $.Values.global.clusterVersion because that gets resolved to the
 # hub's cluster version, whereas we want to include the spoke cluster version
 - '$patternref/values-{{ `{{ printf "%d.%d" ((semver (index (lookup "config.openshift.io/v1" "ClusterVersion" "" "version").status.history 0).version).Major) ((semver (index (lookup "config.openshift.io/v1" "ClusterVersion" "" "version").status.history 0).version).Minor) }}` }}-{{ .name }}.yaml'
+- '$patternref/values-{{ `{{ (split "." (lookup "config.openshift.io/v1" "Ingress" "" "cluster").spec.domain)._1 }}` }}.yaml'
 {{- end }} {{- /*acm.app.policies.multisourcevaluefiles */}}
 
 {{- define "acm.app.policies.helmparameters" -}}
