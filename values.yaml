@@ -77,7 +77,8 @@ acm:
     source: redhat-operators
     # -- Default gitops channel to install on remote clusters
     channel: "gitops-1.18"
-
+    # -- Default namespace for the gitops subscription on remote clusters
+    subscriptionNamespace: openshift-gitops-operator
 
 # -- Default secretstore configuration variables
 # @default -- depends on the individual settings

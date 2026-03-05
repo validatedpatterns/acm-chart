@@ -33,7 +33,7 @@ spec:
                 kind: Subscription
                 metadata:
                   name: openshift-gitops-operator
-                  namespace: openshift-operators
+                  namespace: {{- if and $.Values.acm.spokeGitops $.Values.acm.spokeGitops.subscriptionNamespace }} {{ $.Values.acm.spokeGitops.subscriptionNamespace }}{{- else }} openshift-gitops-operator{{- end }}
                   labels:
                     operators.coreos.com/openshift-gitops-operator.openshift-operators: ''
                 spec:
