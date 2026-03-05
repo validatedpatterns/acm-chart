@@ -56,6 +56,22 @@ tests:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.source
           value: custom-operators
 
+  - it: Should use subscriptionNamespace for subscription namespace when specified
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      acm:
+        spokeGitops:
+          subscriptionNamespace: test-gitops-namespace
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.namespace
+          value: test-gitops-namespace
+
+
   - it: Should use spokeGitops channel and source when both specified
     values:
       - ./clusterselector_values.yaml
