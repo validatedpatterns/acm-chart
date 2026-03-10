@@ -20,7 +20,9 @@ spec:
         metadata:
           name: {{ .name }}-clustergroup-config
         spec:
+          {{- if or ($.Values.global.deletePattern | eq "DeleteChildApps" ) ($.Values.global.deletePattern | eq "DeleteSpokeChildApps" )}}
           pruneObjectBehavior: DeleteIfCreated
+          {{- end }}
           remediationAction: enforce
           severity: medium
           namespaceSelector:
