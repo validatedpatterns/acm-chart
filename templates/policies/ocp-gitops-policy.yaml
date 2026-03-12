@@ -26,6 +26,14 @@ spec:
             include:
               - default
           object-templates:
+            {{- if $.Values.global.gitOpsSubNamespace }}
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: v1
+                kind: Namespace
+                metadata:
+                  name: {{ $.Values.global.gitOpsSubNamespace }}
+            {{- end }}
             - complianceType: mustonlyhave
               objectDefinition:
                 # This is an auto-generated file. DO NOT EDIT

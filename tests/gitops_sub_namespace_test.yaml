@@ -33,6 +33,23 @@ tests:
           value:
             operators.coreos.com/openshift-gitops-operator.openshift-operators: ""
 
+  - it: should not create a namespace object-template when gitOpsSubNamespace is not set
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          region-one:
+            name: region-one
+            acmlabels:
+              - name: clusterGroup
+                value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: region-one-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.kind
+          value: Subscription
+
   - it: should default subscription namespace to openshift-operators when gitOpsSubNamespace is empty
     set:
       global:
@@ -59,6 +76,31 @@ tests:
           value:
             operators.coreos.com/openshift-gitops-operator.openshift-operators: ""
 
+  - it: should create namespace object-template when gitOpsSubNamespace is set
+    set:
+      global:
+        gitOpsSubNamespace: my-gitops-ns
+      clusterGroup:
+        managedClusterGroups:
+          region-one:
+            name: region-one
+            acmlabels:
+              - name: clusterGroup
+                value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: region-one-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.kind
+          value: Namespace
+      - documentSelector:
+          path: metadata.name
+          value: region-one-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.name
+          value: my-gitops-ns
+
   - it: should use gitOpsSubNamespace as subscription namespace when set
     set:
       global:
@@ -75,12 +117,12 @@ tests:
           path: metadata.name
           value: region-one-gitops-policy
         matchRegex:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.namespace
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.metadata.namespace
           pattern: ^my-gitops-ns$
       - documentSelector:
           path: metadata.name
           value: region-one-gitops-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.labels
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.metadata.labels
           value:
             operators.coreos.com/openshift-gitops-operator.my-gitops-ns: ""
