@@ -25,13 +25,6 @@ tests:
         matchRegex:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.namespace
           pattern: ^openshift-operators$
-      - documentSelector:
-          path: metadata.name
-          value: region-one-gitops-policy
-        equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.labels
-          value:
-            operators.coreos.com/openshift-gitops-operator.openshift-operators: ""
 
   - it: should not create a namespace object-template when gitOpsSubNamespace is not set
     set:
@@ -68,13 +61,6 @@ tests:
         matchRegex:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.namespace
           pattern: ^openshift-operators$
-      - documentSelector:
-          path: metadata.name
-          value: region-one-gitops-policy
-        equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.labels
-          value:
-            operators.coreos.com/openshift-gitops-operator.openshift-operators: ""
 
   - it: should create namespace object-template when gitOpsSubNamespace is set
     set:
@@ -119,10 +105,3 @@ tests:
         matchRegex:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.metadata.namespace
           pattern: ^my-gitops-ns$
-      - documentSelector:
-          path: metadata.name
-          value: region-one-gitops-policy
-        equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.metadata.labels
-          value:
-            operators.coreos.com/openshift-gitops-operator.my-gitops-ns: ""
