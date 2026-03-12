@@ -41,8 +41,6 @@ spec:
                   name: {{ $.Values.global.gitOpsSubNamespace }}-operator-group
                   namespace: {{ $.Values.global.gitOpsSubNamespace }}
                 spec:
-                  targetNamespaces:
-                    - {{ $.Values.global.gitOpsSubNamespace }}
             {{- end }}
             - complianceType: mustonlyhave
               objectDefinition:
