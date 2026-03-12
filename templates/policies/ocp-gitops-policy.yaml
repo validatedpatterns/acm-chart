@@ -33,6 +33,16 @@ spec:
                 kind: Namespace
                 metadata:
                   name: {{ $.Values.global.gitOpsSubNamespace }}
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: operators.coreos.com/v1
+                kind: OperatorGroup
+                metadata:
+                  name: {{ $.Values.global.gitOpsSubNamespace }}-operator-group
+                  namespace: {{ $.Values.global.gitOpsSubNamespace }}
+                spec:
+                  targetNamespaces:
+                    - {{ $.Values.global.gitOpsSubNamespace }}
             {{- end }}
             - complianceType: mustonlyhave
               objectDefinition:

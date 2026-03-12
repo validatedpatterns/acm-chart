@@ -26,7 +26,7 @@ tests:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.namespace
           pattern: ^openshift-operators$
 
-  - it: should not create a namespace object-template when gitOpsSubNamespace is not set
+  - it: should not create namespace or operatorgroup object-templates when gitOpsSubNamespace is not set
     set:
       clusterGroup:
         managedClusterGroups:
@@ -87,6 +87,43 @@ tests:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.name
           value: my-gitops-ns
 
+  - it: should create operatorgroup object-template when gitOpsSubNamespace is set
+    set:
+      global:
+        gitOpsSubNamespace: my-gitops-ns
+      clusterGroup:
+        managedClusterGroups:
+          region-one:
+            name: region-one
+            acmlabels:
+              - name: clusterGroup
+                value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: region-one-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.kind
+          value: OperatorGroup
+      - documentSelector:
+          path: metadata.name
+          value: region-one-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.metadata.name
+          value: my-gitops-ns-operator-group
+      - documentSelector:
+          path: metadata.name
+          value: region-one-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.metadata.namespace
+          value: my-gitops-ns
+      - documentSelector:
+          path: metadata.name
+          value: region-one-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.targetNamespaces[0]
+          value: my-gitops-ns
+
   - it: should use gitOpsSubNamespace as subscription namespace when set
     set:
       global:
@@ -103,5 +140,5 @@ tests:
           path: metadata.name
           value: region-one-gitops-policy
         matchRegex:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.metadata.namespace
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[2].objectDefinition.metadata.namespace
           pattern: ^my-gitops-ns$
