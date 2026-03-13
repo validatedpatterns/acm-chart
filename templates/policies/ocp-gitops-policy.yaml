@@ -26,6 +26,22 @@ spec:
             include:
               - default
           object-templates:
+            {{- if $.Values.global.gitOpsSubNamespace }}
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: v1
+                kind: Namespace
+                metadata:
+                  name: {{ $.Values.global.gitOpsSubNamespace }}
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: operators.coreos.com/v1
+                kind: OperatorGroup
+                metadata:
+                  name: {{ $.Values.global.gitOpsSubNamespace }}-operator-group
+                  namespace: {{ $.Values.global.gitOpsSubNamespace }}
+                spec:
+            {{- end }}
             - complianceType: mustonlyhave
               objectDefinition:
                 # This is an auto-generated file. DO NOT EDIT
@@ -33,9 +49,7 @@ spec:
                 kind: Subscription
                 metadata:
                   name: openshift-gitops-operator
-                  namespace: openshift-operators
-                  labels:
-                    operators.coreos.com/openshift-gitops-operator.openshift-operators: ''
+                  namespace: {{ if $.Values.global.gitOpsSubNamespace }}{{ $.Values.global.gitOpsSubNamespace }}{{ else }}openshift-operators{{ end }}
                 spec:
                   channel: {{- if and $.Values.acm.spokeGitops $.Values.acm.spokeGitops.channel }} {{ $.Values.acm.spokeGitops.channel }}{{- else if and $.Values.main $.Values.main.gitops $.Values.main.gitops.channel }} {{ $.Values.main.gitops.channel }}{{- else }} gitops-1.18{{- end }}
                   installPlanApproval: Automatic
