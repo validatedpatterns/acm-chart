@@ -53,7 +53,7 @@ spec:
                   namespace: openshift-gitops
                   labels:
                     config.openshift.io/inject-trusted-cabundle: 'true'
-            {{- if ne $.Values.global.gitOpsSubNamespace "openshift-operators" }}
+            {{- if and $.Values.global.gitOpsSubNamespace (ne $.Values.global.gitOpsSubNamespace "openshift-operators") }}
             - complianceType: mustonlyhave
               objectDefinition:
                 apiVersion: v1

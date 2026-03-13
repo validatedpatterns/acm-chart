@@ -137,6 +137,44 @@ tests:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates
           count: 2 # Just subscription and configmap
 
+  - it: should not create operatorgroup nor namespace object-template when gitOpsSubNamespace is set to null
+    set:
+      global:
+        gitOpsSubNamespace: null
+      clusterGroup:
+        managedClusterGroups:
+          region-one:
+            name: region-one
+            acmlabels:
+              - name: clusterGroup
+                value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: region-one-gitops-policy
+        lengthEqual:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates
+          count: 2 # Just subscription and configmap
+
+  - it: should not create operatorgroup nor namespace object-template when gitOpsSubNamespace is set to empty
+    set:
+      global:
+        gitOpsSubNamespace: ''
+      clusterGroup:
+        managedClusterGroups:
+          region-one:
+            name: region-one
+            acmlabels:
+              - name: clusterGroup
+                value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: region-one-gitops-policy
+        lengthEqual:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates
+          count: 2 # Just subscription and configmap
+
   - it: should use gitOpsSubNamespace as subscription namespace when set
     set:
       global:
