@@ -14,6 +14,7 @@ This chart is used by the Validated Patterns to configure ACM and manage remote 
 | acm.mch_spec | object | `{}` | MultiClusterHub spec (empty by default) |
 | acm.spokeGitops.channel | string | `"gitops-1.18"` | Default gitops channel to install on remote clusters |
 | acm.spokeGitops.source | string | `"redhat-operators"` |  |
+| acm.spokeGitops.subscriptionNamespace | string | `"openshift-gitops-operator"` | Default namespace for the gitops subscription on remote clusters |
 | clusterGroup | object | depends on the individual settings | Dictionary of all the clustergroups of the pattern |
 | clusterGroup.managedClusterGroups | object | `{}` | The set of cluters managed by ACM which is running inside this clusterGroup |
 | clusterGroup.subscriptions | object | `{"acm":{"source":"redhat-operators"}}` | Dictionary of subscriptions for this specific clusterGroup |
