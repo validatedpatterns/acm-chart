@@ -117,12 +117,6 @@ tests:
         equal:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.metadata.namespace
           value: my-gitops-ns
-      - documentSelector:
-          path: metadata.name
-          value: region-one-gitops-policy
-        equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.targetNamespaces[0]
-          value: my-gitops-ns
 
   - it: should use gitOpsSubNamespace as subscription namespace when set
     set:

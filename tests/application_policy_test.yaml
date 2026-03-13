@@ -209,7 +209,7 @@ tests:
           value: group-one-clustergroup-policy
         lengthEqual:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters
-          count: 19 # 17 (in the helper) +2 (1 override, and 1 clusterGroup.name)
+          count: 20 # 17 (in the helper) +3 (1 override, and 1 clusterGroup.name)
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
@@ -244,7 +244,7 @@ tests:
           value: group-one-clustergroup-policy
         lengthEqual:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters
-          count: 19 # 17 (in the helper) +2 (1 override, and 1 clusterGroup.name)
+          count: 20 # 17 (in the helper) +3 (1 override, and 1 clusterGroup.name)
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
