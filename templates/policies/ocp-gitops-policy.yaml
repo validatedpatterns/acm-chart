@@ -26,22 +26,6 @@ spec:
             include:
               - default
           object-templates:
-            {{- if $.Values.global.gitOpsSubNamespace }}
-            - complianceType: mustonlyhave
-              objectDefinition:
-                apiVersion: v1
-                kind: Namespace
-                metadata:
-                  name: {{ $.Values.global.gitOpsSubNamespace }}
-            - complianceType: mustonlyhave
-              objectDefinition:
-                apiVersion: operators.coreos.com/v1
-                kind: OperatorGroup
-                metadata:
-                  name: {{ $.Values.global.gitOpsSubNamespace }}-operator-group
-                  namespace: {{ $.Values.global.gitOpsSubNamespace }}
-                spec:
-            {{- end }}
             - complianceType: mustonlyhave
               objectDefinition:
                 # This is an auto-generated file. DO NOT EDIT
@@ -69,6 +53,22 @@ spec:
                   namespace: openshift-gitops
                   labels:
                     config.openshift.io/inject-trusted-cabundle: 'true'
+            {{- if ne $.Values.global.gitOpsSubNamespace "openshift-operators" }}
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: v1
+                kind: Namespace
+                metadata:
+                  name: {{ $.Values.global.gitOpsSubNamespace }}
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: operators.coreos.com/v1
+                kind: OperatorGroup
+                metadata:
+                  name: {{ $.Values.global.gitOpsSubNamespace }}-operator-group
+                  namespace: {{ $.Values.global.gitOpsSubNamespace }}
+                spec:
+            {{- end }}
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
