@@ -87,6 +87,65 @@ tests:
           path: spec.clusterSelector.matchLabels.clusterGroup
           value: group-two
 
+  # Test for openshift-gitops-cluster-admin-rolebinding CRB
+  - it: Should precreate the openshift-gitops-cluster-admin-rolebinding ClusterRoleBinding
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.kind
+          value: ClusterRoleBinding
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.name
+          value: openshift-gitops-cluster-admin-rolebinding
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.roleRef.kind
+          value: ClusterRole
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.roleRef.name
+          value: cluster-admin
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].complianceType
+          value: mustonlyhave
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        contains:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.subjects
+          content:
+            kind: ServiceAccount
+            name: openshift-gitops-argocd-application-controller
+            namespace: openshift-gitops
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        contains:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.subjects
+          content:
+            kind: ServiceAccount
+            name: openshift-gitops-argocd-server
+            namespace: openshift-gitops
+
   # Tests for clusterGroupGitRepoUrl and clusterGroupChartGitRevision
   - it: Should use chart clustergroup when clusterGroupGitRepoUrl is not set
     values:
@@ -101,25 +160,25 @@ tests:
           path: metadata.name
           value: group-one-clustergroup-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].chart
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].chart
           value: clustergroup
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].repoURL
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].repoURL
           value: "https://charts.example.com"
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].targetRevision
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].targetRevision
           value: "0.1.0"
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
         isNull:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].path
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].path
 
   - it: Should use path when clusterGroupGitRepoUrl is set
     values:
@@ -138,25 +197,25 @@ tests:
           path: metadata.name
           value: group-one-clustergroup-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].path
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].path
           value: "."
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].repoURL
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].repoURL
           value: "https://github.com/example/clustergroup-chart"
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].targetRevision
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].targetRevision
           value: "feature-branch"
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
         isNull:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].chart
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].chart
 
   - it: Should use clusterGroupGitRepoUrl with fallback to multiSourceTargetRevision when only clusterGroupGitRepoUrl is set
     values:
@@ -174,19 +233,19 @@ tests:
           path: metadata.name
           value: group-one-clustergroup-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].path
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].path
           value: "."
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].repoURL
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].repoURL
           value: "https://github.com/example/clustergroup-chart"
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].targetRevision
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].targetRevision
           value: "0.1.0"
 
   - it: should render a spoke app of apps with the correct helm parameters (no deletePattern set)
@@ -208,19 +267,19 @@ tests:
           path: metadata.name
           value: group-one-clustergroup-policy
         lengthEqual:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].helm.parameters
           count: 20 # 17 (in the helper) +3 (1 override, and 1 clusterGroup.name)
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters[16].name
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].helm.parameters[16].name
           value: "global.deletePattern"
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters[16].value
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].helm.parameters[16].value
           value: null
 
   - it: should render a spoke app of apps with the correct helm parameters (if deletePattern set to DeleteSpokeChildApps)
@@ -243,19 +302,19 @@ tests:
           path: metadata.name
           value: group-one-clustergroup-policy
         lengthEqual:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].helm.parameters
           count: 20 # 17 (in the helper) +3 (1 override, and 1 clusterGroup.name)
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters[16].name
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].helm.parameters[16].name
           value: "global.deletePattern"
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.sources[1].helm.parameters[16].value
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].helm.parameters[16].value
           value: "DeleteChildApps"
 
   - it: should not render a spoke app of apps (if deletePattern set to DeleteSpoke)
