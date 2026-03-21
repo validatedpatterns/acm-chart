@@ -44,7 +44,7 @@ spec:
                     env:
                       - name: ARGOCD_CLUSTER_CONFIG_NAMESPACES
                         value: "*"
-            - complianceType: mustonlyhave
+            - complianceType: musthave
               objectDefinition:
                 kind: ConfigMap
                 apiVersion: v1
