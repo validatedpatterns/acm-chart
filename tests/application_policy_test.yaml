@@ -14,7 +14,7 @@ tests:
           path: metadata.name
           value: group-one-placement
         equal:
-          path: spec.clusterSelector.matchLabels.clusterGroup
+          path: spec.predicates[0].requiredClusterSelector.labelSelector.matchLabels.clusterGroup
           value: group-one
 
   - it: Should render the clusterselector when using acmlabels with an override
@@ -33,7 +33,7 @@ tests:
           path: metadata.name
           value: group-two-placement
         equal:
-          path: spec.clusterSelector.matchLabels.clusterGroup
+          path: spec.predicates[0].requiredClusterSelector.labelSelector.matchLabels.clusterGroup
           value: group-two
 
   - it: Should render the clusterselector when using json
@@ -50,7 +50,7 @@ tests:
           path: metadata.name
           value: group-one-placement
         equal:
-          path: spec.clusterSelector
+          path: spec.predicates[0].requiredClusterSelector.labelSelector
           value: {foo: bar}
 
   - it: Should render the clusterselector when acmlabels is empty
@@ -67,7 +67,7 @@ tests:
           path: metadata.name
           value: group-two-placement
         equal:
-          path: spec.clusterSelector.matchLabels.clusterGroup
+          path: spec.predicates[0].requiredClusterSelector.labelSelector.matchLabels.clusterGroup
           value: group-two
 
   - it: Should render the clusterselector when acmlabels is unset
@@ -84,7 +84,7 @@ tests:
           path: metadata.name
           value: group-two-placement
         equal:
-          path: spec.clusterSelector.matchLabels.clusterGroup
+          path: spec.predicates[0].requiredClusterSelector.labelSelector.matchLabels.clusterGroup
           value: group-two
 
   # Test for openshift-gitops-cluster-admin-rolebinding CRB
