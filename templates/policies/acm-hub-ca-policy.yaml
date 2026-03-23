@@ -47,24 +47,21 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 placementRef:
   name: hub-argo-ca-{{ .name }}-placement
-  kind: PlacementRule
-  apiGroup: apps.open-cluster-management.io
+  kind: Placement
+  apiGroup: cluster.open-cluster-management.io
 subjects:
   - name: hub-argo-ca-{{ .name }}-policy
     kind: Policy
     apiGroup: policy.open-cluster-management.io
 ---
-apiVersion: apps.open-cluster-management.io/v1
-kind: PlacementRule
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
 metadata:
   name: hub-argo-ca-{{ .name }}-placement
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  clusterConditions:
-    - status: 'True'
-      type: ManagedClusterConditionAvailable
-{{- include "acm.app.clusterSelector" (dict 
+{{- include "acm.app.clusterSelector" (dict
   "clusterSelector" .clusterSelector
   "group" $group
   ) | nindent 2 }}
@@ -127,24 +124,21 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 placementRef:
   name: {{ .name }}-acm-hub-ca-policy-placement
-  kind: PlacementRule
-  apiGroup: apps.open-cluster-management.io
+  kind: Placement
+  apiGroup: cluster.open-cluster-management.io
 subjects:
   - name: {{ .name }}-acm-hub-ca-policy
     kind: Policy
     apiGroup: policy.open-cluster-management.io
 ---
-apiVersion: apps.open-cluster-management.io/v1
-kind: PlacementRule
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
 metadata:
   name: {{ .name }}-acm-hub-ca-policy-placement
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  clusterConditions:
-    - status: 'True'
-      type: ManagedClusterConditionAvailable
-{{- include "acm.app.clusterSelector" (dict 
+{{- include "acm.app.clusterSelector" (dict
   "clusterSelector" .clusterSelector
   "group" $group
   ) | nindent 2 }}
@@ -193,24 +187,21 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 placementRef:
   name: {{ .name }}-hub-argo-ca-gitops-policy-placement
-  kind: PlacementRule
-  apiGroup: apps.open-cluster-management.io
+  kind: Placement
+  apiGroup: cluster.open-cluster-management.io
 subjects:
   - name: {{ .name }}-hub-argo-ca-gitops-policy
     kind: Policy
     apiGroup: policy.open-cluster-management.io
 ---
-apiVersion: apps.open-cluster-management.io/v1
-kind: PlacementRule
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
 metadata:
   name: {{ .name }}-hub-argo-ca-gitops-policy-placement
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  clusterConditions:
-    - status: 'True'
-      type: ManagedClusterConditionAvailable
-{{- include "acm.app.clusterSelector" (dict 
+{{- include "acm.app.clusterSelector" (dict
   "clusterSelector" .clusterSelector
   "group" $group
   ) | nindent 2 }}

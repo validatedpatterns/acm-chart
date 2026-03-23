@@ -44,7 +44,7 @@ spec:
                     env:
                       - name: ARGOCD_CLUSTER_CONFIG_NAMESPACES
                         value: "*"
-            - complianceType: mustonlyhave
+            - complianceType: musthave
               objectDefinition:
                 kind: ConfigMap
                 apiVersion: v1
@@ -78,24 +78,21 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 placementRef:
   name: {{ .name }}-gitops-placement
-  kind: PlacementRule
-  apiGroup: apps.open-cluster-management.io
+  kind: Placement
+  apiGroup: cluster.open-cluster-management.io
 subjects:
   - name: {{ .name }}-gitops-policy
     kind: Policy
     apiGroup: policy.open-cluster-management.io
 ---
-apiVersion: apps.open-cluster-management.io/v1
-kind: PlacementRule
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
 metadata:
   name: {{ .name }}-gitops-placement
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  clusterConditions:
-    - status: 'True'
-      type: ManagedClusterConditionAvailable
-{{- include "acm.app.clusterSelector" (dict 
+{{- include "acm.app.clusterSelector" (dict
   "clusterSelector" .clusterSelector
   "group" $group
   ) | nindent 2 }}
@@ -310,24 +307,21 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 placementRef:
   name: {{ .name }}-gitops-placement-argocd
-  kind: PlacementRule
-  apiGroup: apps.open-cluster-management.io
+  kind: Placement
+  apiGroup: cluster.open-cluster-management.io
 subjects:
   - name: {{ .name }}-gitops-policy-argocd
     kind: Policy
     apiGroup: policy.open-cluster-management.io
 ---
-apiVersion: apps.open-cluster-management.io/v1
-kind: PlacementRule
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
 metadata:
   name: {{ .name }}-gitops-placement-argocd
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  clusterConditions:
-    - status: 'True'
-      type: ManagedClusterConditionAvailable
-{{- include "acm.app.clusterSelector" (dict 
+{{- include "acm.app.clusterSelector" (dict
   "clusterSelector" .clusterSelector
   "group" $group
   ) | nindent 2 }}

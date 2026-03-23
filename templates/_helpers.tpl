@@ -79,47 +79,57 @@ if this chart gets DeleteSpokeChildApps, it will set deletePattern to DeleteChil
 {{- $isMap   := kindIs "map"   $rawLabels -}}
 {{- $hasAny  := and $rawLabels (gt (len $rawLabels) 0) -}}
 {{- if $cs -}}
-clusterSelector: {{ $cs | toPrettyJson }}
+predicates:
+  - requiredClusterSelector:
+      labelSelector: {{ $cs | toPrettyJson | nindent 8 }}
 {{- else if not $hasAny -}}
-clusterSelector:
-  matchExpressions:
-    - key: local-cluster
-      operator: NotIn
-      values:
-        - 'true'
-  matchLabels:
-    clusterGroup: {{ $g.name }}
+predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+          - key: local-cluster
+            operator: NotIn
+            values:
+              - 'true'
+        matchLabels:
+          clusterGroup: {{ $g.name }}
 {{- else if $isSlice -}}
-clusterSelector:
-  matchExpressions:
-    - key: local-cluster
-      operator: NotIn
-      values:
-        - 'true'
-  matchLabels:
+predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+          - key: local-cluster
+            operator: NotIn
+            values:
+              - 'true'
+        matchLabels:
 {{- range $rawLabels }}
-    {{ .name }}: {{ .value }}
+          {{ .name }}: {{ .value }}
 {{- end }}
 {{- else if $isMap -}}
-clusterSelector:
-  matchExpressions:
-    - key: local-cluster
-      operator: NotIn
-      values:
-        - 'true'
-  matchLabels:
+predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+          - key: local-cluster
+            operator: NotIn
+            values:
+              - 'true'
+        matchLabels:
 {{- range $k, $v := $rawLabels }}
-    {{ $k }}: {{ $v }}
+          {{ $k }}: {{ $v }}
 {{- end }}
 {{- else -}} {{- /* Fallback: unknown acmlabels shape then default to group */}}
-clusterSelector:
-  matchExpressions:
-    - key: local-cluster
-      operator: NotIn
-      values:
-        - 'true'
-  matchLabels:
-    clusterGroup: {{ $g.name }}
+predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+          - key: local-cluster
+            operator: NotIn
+            values:
+              - 'true'
+        matchLabels:
+          clusterGroup: {{ $g.name }}
 {{- end -}}
 {{- end -}} {{- /*acm.app.clusterSelector */}}
 
