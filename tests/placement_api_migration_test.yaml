@@ -1,0 +1,534 @@
+suite: Test Placement API migration (PlacementRule -> Placement)
+templates:
+  - templates/policies/application-policies.yaml
+  - templates/policies/ocp-gitops-policy.yaml
+  - templates/policies/acm-hub-ca-policy.yaml
+  - templates/policies/private-repo-policies.yaml
+release:
+  name: release-test
+tests:
+  - it: "application-policies: PlacementBinding should reference kind Placement"
+    template: templates/policies/application-policies.yaml
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-placement-binding
+        equal:
+          path: placementRef.kind
+          value: Placement
+      - documentSelector:
+          path: metadata.name
+          value: group-one-placement-binding
+        equal:
+          path: placementRef.apiGroup
+          value: cluster.open-cluster-management.io
+
+  - it: "application-policies: Placement should use cluster.open-cluster-management.io/v1beta1"
+    template: templates/policies/application-policies.yaml
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-placement
+        isKind:
+          of: Placement
+      - documentSelector:
+          path: metadata.name
+          value: group-one-placement
+        isAPIVersion:
+          of: cluster.open-cluster-management.io/v1beta1
+      - documentSelector:
+          path: metadata.name
+          value: group-one-placement
+        isNull:
+          path: spec.clusterConditions
+
+  - it: "ocp-gitops: PlacementBinding should reference kind Placement (gitops)"
+    template: templates/policies/ocp-gitops-policy.yaml
+    values:
+      - ./clusterselector_values.yaml
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-placement-binding
+        equal:
+          path: placementRef.kind
+          value: Placement
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-placement-binding
+        equal:
+          path: placementRef.apiGroup
+          value: cluster.open-cluster-management.io
+
+  - it: "ocp-gitops: Placement should use cluster.open-cluster-management.io/v1beta1 (gitops)"
+    template: templates/policies/ocp-gitops-policy.yaml
+    values:
+      - ./clusterselector_values.yaml
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-placement
+        isKind:
+          of: Placement
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-placement
+        isAPIVersion:
+          of: cluster.open-cluster-management.io/v1beta1
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-placement
+        isNull:
+          path: spec.clusterConditions
+
+  - it: "ocp-gitops: PlacementBinding should reference kind Placement (argocd)"
+    template: templates/policies/ocp-gitops-policy.yaml
+    values:
+      - ./clusterselector_values.yaml
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-placement-binding-argocd
+        equal:
+          path: placementRef.kind
+          value: Placement
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-placement-binding-argocd
+        equal:
+          path: placementRef.apiGroup
+          value: cluster.open-cluster-management.io
+
+  - it: "ocp-gitops: Placement should use cluster.open-cluster-management.io/v1beta1 (argocd)"
+    template: templates/policies/ocp-gitops-policy.yaml
+    values:
+      - ./clusterselector_values.yaml
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-placement-argocd
+        isKind:
+          of: Placement
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-placement-argocd
+        isAPIVersion:
+          of: cluster.open-cluster-management.io/v1beta1
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-placement-argocd
+        isNull:
+          path: spec.clusterConditions
+
+  - it: "ocp-gitops: Placement predicates should have correct clusterSelector structure"
+    template: templates/policies/ocp-gitops-policy.yaml
+    values:
+      - ./clusterselector_values.yaml
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-placement
+        equal:
+          path: spec.predicates[0].requiredClusterSelector.labelSelector.matchLabels.clusterGroup
+          value: group-one
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-placement
+        contains:
+          path: spec.predicates[0].requiredClusterSelector.labelSelector.matchExpressions
+          content:
+            key: local-cluster
+            operator: NotIn
+            values:
+              - "true"
+
+  - it: "acm-hub-ca: PlacementBinding should reference kind Placement (hub-argo-ca)"
+    template: templates/policies/acm-hub-ca-policy.yaml
+    set:
+      global:
+        repoURL: https://github.com/test/repo
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub.example.com"
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: true
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: hub-argo-ca-region-one-placement-binding
+        equal:
+          path: placementRef.kind
+          value: Placement
+      - documentSelector:
+          path: metadata.name
+          value: hub-argo-ca-region-one-placement-binding
+        equal:
+          path: placementRef.apiGroup
+          value: cluster.open-cluster-management.io
+
+  - it: "acm-hub-ca: Placement should use cluster.open-cluster-management.io/v1beta1 (hub-argo-ca)"
+    template: templates/policies/acm-hub-ca-policy.yaml
+    set:
+      global:
+        repoURL: https://github.com/test/repo
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub.example.com"
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: true
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: hub-argo-ca-region-one-placement
+        isKind:
+          of: Placement
+      - documentSelector:
+          path: metadata.name
+          value: hub-argo-ca-region-one-placement
+        isAPIVersion:
+          of: cluster.open-cluster-management.io/v1beta1
+      - documentSelector:
+          path: metadata.name
+          value: hub-argo-ca-region-one-placement
+        isNull:
+          path: spec.clusterConditions
+
+  - it: "acm-hub-ca: All three PlacementBindings should reference kind Placement (vault)"
+    template: templates/policies/acm-hub-ca-policy.yaml
+    set:
+      global:
+        repoURL: https://github.com/test/repo
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub.example.com"
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: true
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: region-one-acm-hub-ca-policy-placement-binding
+        equal:
+          path: placementRef.kind
+          value: Placement
+      - documentSelector:
+          path: metadata.name
+          value: region-one-acm-hub-ca-policy-placement-binding
+        equal:
+          path: placementRef.apiGroup
+          value: cluster.open-cluster-management.io
+      - documentSelector:
+          path: metadata.name
+          value: region-one-hub-argo-ca-gitops-policy-binding
+        equal:
+          path: placementRef.kind
+          value: Placement
+      - documentSelector:
+          path: metadata.name
+          value: region-one-hub-argo-ca-gitops-policy-binding
+        equal:
+          path: placementRef.apiGroup
+          value: cluster.open-cluster-management.io
+
+  - it: "acm-hub-ca: All three Placements should use correct apiVersion (vault)"
+    template: templates/policies/acm-hub-ca-policy.yaml
+    set:
+      global:
+        repoURL: https://github.com/test/repo
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub.example.com"
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: true
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: region-one-acm-hub-ca-policy-placement
+        isKind:
+          of: Placement
+      - documentSelector:
+          path: metadata.name
+          value: region-one-acm-hub-ca-policy-placement
+        isAPIVersion:
+          of: cluster.open-cluster-management.io/v1beta1
+      - documentSelector:
+          path: metadata.name
+          value: region-one-acm-hub-ca-policy-placement
+        isNull:
+          path: spec.clusterConditions
+      - documentSelector:
+          path: metadata.name
+          value: region-one-hub-argo-ca-gitops-policy-placement
+        isKind:
+          of: Placement
+      - documentSelector:
+          path: metadata.name
+          value: region-one-hub-argo-ca-gitops-policy-placement
+        isAPIVersion:
+          of: cluster.open-cluster-management.io/v1beta1
+      - documentSelector:
+          path: metadata.name
+          value: region-one-hub-argo-ca-gitops-policy-placement
+        isNull:
+          path: spec.clusterConditions
+
+  - it: "acm-hub-ca: Placement predicates should have correct clusterSelector structure"
+    template: templates/policies/acm-hub-ca-policy.yaml
+    set:
+      global:
+        repoURL: https://github.com/test/repo
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub.example.com"
+        secretStore:
+          backend: "vault"
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: true
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: hub-argo-ca-region-one-placement
+        equal:
+          path: spec.predicates[0].requiredClusterSelector.labelSelector.matchLabels.clusterGroup
+          value: region-one
+
+  - it: "private-repo: PlacementBinding should reference kind Placement (per-group)"
+    template: templates/policies/private-repo-policies.yaml
+    set:
+      global:
+        repoURL: https://github.com/test/repo
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub.example.com"
+        privateRepo: true
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: true
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: private-region-one-placement-binding
+        equal:
+          path: placementRef.kind
+          value: Placement
+      - documentSelector:
+          path: metadata.name
+          value: private-region-one-placement-binding
+        equal:
+          path: placementRef.apiGroup
+          value: cluster.open-cluster-management.io
+
+  - it: "private-repo: Placement should use cluster.open-cluster-management.io/v1beta1 (per-group)"
+    template: templates/policies/private-repo-policies.yaml
+    set:
+      global:
+        repoURL: https://github.com/test/repo
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub.example.com"
+        privateRepo: true
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: true
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: private-region-one-placement
+        isKind:
+          of: Placement
+      - documentSelector:
+          path: metadata.name
+          value: private-region-one-placement
+        isAPIVersion:
+          of: cluster.open-cluster-management.io/v1beta1
+      - documentSelector:
+          path: metadata.name
+          value: private-region-one-placement
+        isNull:
+          path: spec.clusterConditions
+
+  - it: "private-repo: Hub PlacementBinding should reference kind Placement"
+    template: templates/policies/private-repo-policies.yaml
+    set:
+      global:
+        repoURL: https://github.com/test/repo
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub.example.com"
+        privateRepo: true
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: true
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: vp-private-hub-placement-binding
+        equal:
+          path: placementRef.kind
+          value: Placement
+      - documentSelector:
+          path: metadata.name
+          value: vp-private-hub-placement-binding
+        equal:
+          path: placementRef.apiGroup
+          value: cluster.open-cluster-management.io
+
+  - it: "private-repo: Hub Placement should use predicates with local-cluster selector"
+    template: templates/policies/private-repo-policies.yaml
+    set:
+      global:
+        repoURL: https://github.com/test/repo
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub.example.com"
+        privateRepo: true
+        pattern: "test-pattern"
+      clusterGroup:
+        isHubCluster: true
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            labels:
+            - name: clusterGroup
+              value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: vp-private-hub-placement
+        isKind:
+          of: Placement
+      - documentSelector:
+          path: metadata.name
+          value: vp-private-hub-placement
+        isAPIVersion:
+          of: cluster.open-cluster-management.io/v1beta1
+      - documentSelector:
+          path: metadata.name
+          value: vp-private-hub-placement
+        isNull:
+          path: spec.clusterConditions
+      - documentSelector:
+          path: metadata.name
+          value: vp-private-hub-placement
+        contains:
+          path: spec.predicates[0].requiredClusterSelector.labelSelector.matchExpressions
+          content:
+            key: local-cluster
+            operator: In
+            values:
+              - "true"
+
+  - it: "application-policies: Placement predicates work with map-style labels"
+    template: templates/policies/application-policies.yaml
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+      clusterGroup:
+        managedClusterGroups:
+          exampleRegion:
+            name: group-one
+            acmlabels:
+              environment: production
+              region: us-east
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-placement
+        isKind:
+          of: Placement
+      - documentSelector:
+          path: metadata.name
+          value: group-one-placement
+        isAPIVersion:
+          of: cluster.open-cluster-management.io/v1beta1
+      - documentSelector:
+          path: metadata.name
+          value: group-one-placement
+        equal:
+          path: spec.predicates[0].requiredClusterSelector.labelSelector.matchLabels.environment
+          value: production
+      - documentSelector:
+          path: metadata.name
+          value: group-one-placement
+        equal:
+          path: spec.predicates[0].requiredClusterSelector.labelSelector.matchLabels.region
+          value: us-east
+      - documentSelector:
+          path: metadata.name
+          value: group-one-placement
+        contains:
+          path: spec.predicates[0].requiredClusterSelector.labelSelector.matchExpressions
+          content:
+            key: local-cluster
+            operator: NotIn
+            values:
+              - "true"
