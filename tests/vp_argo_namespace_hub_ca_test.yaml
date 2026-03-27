@@ -1,0 +1,54 @@
+suite: Test vpArgoNamespace in acm-hub-ca-policy
+templates:
+  - templates/policies/acm-hub-ca-policy.yaml
+release:
+  name: release-test
+tests:
+  - it: should use custom vpArgoNamespace for trusted-hub-bundle ConfigMap namespace
+    set:
+      global:
+        vpArgoNamespace: custom-argocd
+        secretStore:
+          backend: vault
+      clusterGroup:
+        isHubCluster: true
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            acmlabels:
+              - name: clusterGroup
+                value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: region-one-hub-argo-ca-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.namespace
+          value: custom-argocd
+      - documentSelector:
+          path: metadata.name
+          value: region-one-hub-argo-ca-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.name
+          value: trusted-hub-bundle
+
+  - it: should use default vpArgoNamespace for trusted-hub-bundle ConfigMap namespace
+    set:
+      global:
+        secretStore:
+          backend: vault
+      clusterGroup:
+        isHubCluster: true
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            acmlabels:
+              - name: clusterGroup
+                value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: region-one-hub-argo-ca-gitops-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.namespace
+          value: openshift-gitops

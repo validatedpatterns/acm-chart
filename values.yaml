@@ -8,6 +8,8 @@ global:
   # -- List of additional value files to be passed to the pattern
   extraValueFiles: []
   pattern: none
+  # -- The namespace where the cluster-wide ArgoCD instance runs
+  vpArgoNamespace: openshift-gitops
   # -- Repository URL pointing to the pattern
   repoURL: none
     # -- The branch or Git reference to use to deploy the pattern

@@ -1,0 +1,87 @@
+suite: Test vpArgoNamespace in application-policies
+templates:
+  - templates/policies/application-policies.yaml
+release:
+  name: release-test
+tests:
+  - it: should use custom vpArgoNamespace in ClusterRoleBinding name
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        vpArgoNamespace: custom-argocd
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.name
+          value: custom-argocd-cluster-admin-rolebinding
+
+  - it: should use custom vpArgoNamespace in ServiceAccount subjects
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        vpArgoNamespace: custom-argocd
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        contains:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.subjects
+          content:
+            kind: ServiceAccount
+            name: custom-argocd-argocd-application-controller
+            namespace: custom-argocd
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        contains:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.subjects
+          content:
+            kind: ServiceAccount
+            name: custom-argocd-argocd-server
+            namespace: custom-argocd
+
+  - it: should use custom vpArgoNamespace for Application namespace
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        vpArgoNamespace: custom-argocd
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.metadata.namespace
+          value: custom-argocd
+
+  - it: should pass vpArgoNamespace as a helm parameter
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        vpArgoNamespace: custom-argocd
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        contains:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].helm.parameters
+          content:
+            name: global.vpArgoNamespace
+            value: custom-argocd

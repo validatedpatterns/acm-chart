@@ -1,0 +1,99 @@
+suite: Test vpArgoNamespace in private-repo-policies
+templates:
+  - templates/policies/private-repo-policies.yaml
+release:
+  name: release-test
+tests:
+  - it: should use custom vpArgoNamespace for private repo secret namespace on managed clusters
+    set:
+      global:
+        vpArgoNamespace: custom-argocd
+        privateRepo: true
+        pattern: test-pattern
+        repoURL: https://github.com/validatedpatterns/multicloud-gitops
+      clusterGroup:
+        isHubCluster: false
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            acmlabels:
+              - name: clusterGroup
+                value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: private-region-one-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.namespace
+          value: custom-argocd
+
+  - it: should use default vpArgoNamespace for private repo secret namespace on managed clusters
+    set:
+      global:
+        privateRepo: true
+        pattern: test-pattern
+        repoURL: https://github.com/validatedpatterns/multicloud-gitops
+      clusterGroup:
+        isHubCluster: false
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            acmlabels:
+              - name: clusterGroup
+                value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: private-region-one-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.metadata.namespace
+          value: openshift-gitops
+
+  - it: should reference custom vpArgoNamespace in hub policy copySecretData
+    set:
+      global:
+        vpArgoNamespace: custom-argocd
+        privateRepo: true
+        pattern: test-pattern
+        repoURL: https://github.com/validatedpatterns/multicloud-gitops
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub.example.com"
+      clusterGroup:
+        isHubCluster: null
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            acmlabels:
+              - name: clusterGroup
+                value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: vp-private-hub-policy
+        matchRegex:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.data
+          pattern: 'copySecretData "custom-argocd" "vp-private-repo-credentials"'
+
+  - it: should reference default vpArgoNamespace in hub policy copySecretData
+    set:
+      global:
+        privateRepo: true
+        pattern: test-pattern
+        repoURL: https://github.com/validatedpatterns/multicloud-gitops
+        hubClusterDomain: "apps.hub.example.com"
+        localClusterDomain: "apps.hub.example.com"
+      clusterGroup:
+        isHubCluster: null
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            acmlabels:
+              - name: clusterGroup
+                value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: vp-private-hub-policy
+        matchRegex:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.data
+          pattern: 'copySecretData "openshift-gitops" "vp-private-repo-credentials"'

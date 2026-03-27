@@ -87,8 +87,8 @@ tests:
           path: spec.predicates[0].requiredClusterSelector.labelSelector.matchLabels.clusterGroup
           value: group-two
 
-  # Test for openshift-gitops-cluster-admin-rolebinding CRB
-  - it: Should precreate the openshift-gitops-cluster-admin-rolebinding ClusterRoleBinding
+  # Test for cluster-admin-rolebinding CRB (uses default vpArgoNamespace: openshift-gitops)
+  - it: Should precreate the cluster-admin-rolebinding ClusterRoleBinding
     values:
       - ./clusterselector_values.yaml
     set:
@@ -268,7 +268,7 @@ tests:
           value: group-one-clustergroup-policy
         lengthEqual:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].helm.parameters
-          count: 20 # 17 (in the helper) +3 (1 override, and 1 clusterGroup.name)
+          count: 21 # 18 (in the helper) +3 (1 override, and 1 clusterGroup.name)
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
@@ -303,7 +303,7 @@ tests:
           value: group-one-clustergroup-policy
         lengthEqual:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].helm.parameters
-          count: 20 # 17 (in the helper) +3 (1 override, and 1 clusterGroup.name)
+          count: 21 # 18 (in the helper) +3 (1 override, and 1 clusterGroup.name)
       - documentSelector:
           path: metadata.name
           value: group-one-clustergroup-policy
