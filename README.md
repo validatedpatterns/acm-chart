@@ -1,6 +1,6 @@
 # acm
 
-![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square)
+![Version: 0.2.1](https://img.shields.io/badge/Version-0.2.1-informational?style=flat-square)
 
 A Helm chart to configure Advanced Cluster Manager for OpenShift.
 
@@ -25,6 +25,7 @@ This chart is used by the Validated Patterns to configure ACM and manage remote 
 | global.repoURL | string | `"none"` | Repository URL pointing to the pattern |
 | global.secretStore.backend | string | `"vault"` |  |
 | global.targetRevision | string | `"main"` | The branch or Git reference to use to deploy the pattern |
+| global.vpArgoNamespace | string | `"openshift-gitops"` | The namespace where the cluster-wide ArgoCD instance runs |
 | main | object | `{"gitops":{"channel":"gitops-1.18"}}` | Deprecated: Use acm.spokeGitops which takes precedence |
 | main.gitops.channel | string | `"gitops-1.18"` | DEPRECATED: Default gitops channel to install on remote clusters (Use acm.spokeGitops.channel) |
 | secretStore | object | depends on the individual settings | Default secretstore configuration variables |
