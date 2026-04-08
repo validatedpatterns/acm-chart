@@ -1,8 +1,8 @@
-# We copy the vp-private-repo-credentials from the "openshift-gitops" namespace
+# We copy the vp-private-repo-credentials from the ArgoCD namespace
 # to the "open-cluster-management" via the "private-hub-policy"
 #
 # Then we copy the secret from the "open-cluster-management" namespace to the
-# managed clusters "openshift-gitops" instance
+# managed clusters ArgoCD instance
 #
 # And we also copy the same secret to the namespaced argo's namespace
 {{ if $.Values.global.privateRepo }}
@@ -38,7 +38,7 @@ spec:
                 type: Opaque
                 metadata:
                   name: vp-private-repo-credentials
-                  namespace: openshift-gitops
+                  namespace: {{ $.Values.global.vpArgoNamespace }}
                   labels:
                     argocd.argoproj.io/secret-type: repository
                 data: '{{ `{{hub copySecretData "open-cluster-management" "vp-private-repo-credentials" hub}}` }}'
@@ -116,7 +116,7 @@ spec:
                   namespace: open-cluster-management
                   labels:
                     argocd.argoproj.io/secret-type: repository
-                data: '{{ `{{copySecretData "openshift-gitops" "vp-private-repo-credentials"}}` }}'
+                data: '{{ `{{copySecretData "` }}{{ $.Values.global.vpArgoNamespace }}{{ `" "vp-private-repo-credentials"}}` }}'
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding

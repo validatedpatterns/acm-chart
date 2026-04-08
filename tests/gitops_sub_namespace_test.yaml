@@ -78,13 +78,13 @@ tests:
           path: metadata.name
           value: region-one-gitops-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[2].objectDefinition.kind
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[3].objectDefinition.kind
           value: Namespace
       - documentSelector:
           path: metadata.name
           value: region-one-gitops-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[2].objectDefinition.metadata.name
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[3].objectDefinition.metadata.name
           value: yolo
 
   - it: should create operatorgroup object-template when gitOpsSubNamespace is set to something other than openshift-operators
@@ -103,19 +103,19 @@ tests:
           path: metadata.name
           value: region-one-gitops-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[3].objectDefinition.kind
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[4].objectDefinition.kind
           value: OperatorGroup
       - documentSelector:
           path: metadata.name
           value: region-one-gitops-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[3].objectDefinition.metadata.name
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[4].objectDefinition.metadata.name
           value: my-gitops-ns-operator-group
       - documentSelector:
           path: metadata.name
           value: region-one-gitops-policy
         equal:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[3].objectDefinition.metadata.namespace
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[4].objectDefinition.metadata.namespace
           value: my-gitops-ns
 
   - it: should not create operatorgroup nor namespace object-template when gitOpsSubNamespace is set to openshift-operators
@@ -135,7 +135,7 @@ tests:
           value: region-one-gitops-policy
         lengthEqual:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates
-          count: 2 # Just subscription and configmap
+          count: 3 # Subscription, namespace (vpArgoNamespace), and configmap
 
   - it: should not create operatorgroup nor namespace object-template when gitOpsSubNamespace is set to null
     set:
@@ -154,7 +154,7 @@ tests:
           value: region-one-gitops-policy
         lengthEqual:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates
-          count: 2 # Just subscription and configmap
+          count: 3 # Subscription, namespace (vpArgoNamespace), and configmap
 
   - it: should not create operatorgroup nor namespace object-template when gitOpsSubNamespace is set to empty
     set:
@@ -173,7 +173,7 @@ tests:
           value: region-one-gitops-policy
         lengthEqual:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates
-          count: 2 # Just subscription and configmap
+          count: 3 # Subscription, namespace (vpArgoNamespace), and configmap
 
   - it: should use gitOpsSubNamespace as subscription namespace when set
     set:
@@ -191,5 +191,5 @@ tests:
           path: metadata.name
           value: region-one-gitops-policy
         matchRegex:
-          path: spec.policy-templates[0].objectDefinition.spec.object-templates[3].objectDefinition.metadata.namespace
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[4].objectDefinition.metadata.namespace
           pattern: ^my-gitops-ns$

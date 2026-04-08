@@ -172,7 +172,7 @@ spec:
                 apiVersion: v1
                 metadata:
                   name: trusted-hub-bundle
-                  namespace: openshift-gitops
+                  namespace: {{ $.Values.global.vpArgoNamespace }}
                 data:
                   hub-kube-root-ca.crt: |
                     {{ `{{hub fromConfigMap "" "kube-root-ca.crt" "ca.crt" | autoindent hub}}` }}

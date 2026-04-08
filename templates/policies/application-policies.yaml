@@ -34,25 +34,25 @@ spec:
                 apiVersion: rbac.authorization.k8s.io/v1
                 kind: ClusterRoleBinding
                 metadata:
-                  name: openshift-gitops-cluster-admin-rolebinding
+                  name: {{ $.Values.global.vpArgoNamespace }}-cluster-admin-rolebinding
                 roleRef:
                   apiGroup: rbac.authorization.k8s.io
                   kind: ClusterRole
                   name: cluster-admin
                 subjects:
                   - kind: ServiceAccount
-                    name: openshift-gitops-argocd-application-controller
-                    namespace: openshift-gitops
+                    name: {{ $.Values.global.vpArgoNamespace }}-argocd-application-controller
+                    namespace: {{ $.Values.global.vpArgoNamespace }}
                   - kind: ServiceAccount
-                    name: openshift-gitops-argocd-server
-                    namespace: openshift-gitops
+                    name: {{ $.Values.global.vpArgoNamespace }}-argocd-server
+                    namespace: {{ $.Values.global.vpArgoNamespace }}
             - complianceType: mustonlyhave
               objectDefinition:
                 apiVersion: argoproj.io/v1alpha1
                 kind: Application
                 metadata:
                   name: {{ $.Values.global.pattern }}-{{ .name }}
-                  namespace: openshift-gitops
+                  namespace: {{ $.Values.global.vpArgoNamespace }}
                   finalizers:
                   - resources-finalizer.argocd.argoproj.io/foreground
                 spec:
