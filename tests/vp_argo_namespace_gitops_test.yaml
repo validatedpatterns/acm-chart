@@ -161,7 +161,7 @@ tests:
           value: group-one-gitops-policy-argocd
         equal:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.text
-          value: ArgoCD VP
+          value: Argo CD VP
 
   - it: should NOT create ConsoleLink when vpArgoNamespace is openshift-gitops
     values:
