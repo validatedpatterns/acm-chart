@@ -40,6 +40,12 @@ tests:
           path: metadata.annotations["installer.open-cluster-management.io/mce-subscription-spec"]
           value: '{"source": "foo-source","channel": "foo-channel" }'
 
+  - it: Should have the managed annotation
+    asserts:
+      - equal:
+          path: metadata.annotations["patterns.gitops.validatedpatterns.io/managed"]
+          value: true
+
   - it: Should have empty spec by default
     asserts:
       - equal:
