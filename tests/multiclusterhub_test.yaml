@@ -44,7 +44,7 @@ tests:
     asserts:
       - equal:
           path: metadata.annotations["patterns.gitops.validatedpatterns.io/managed"]
-          value: true
+          value: "true"
 
   - it: Should have empty spec by default
     asserts:
