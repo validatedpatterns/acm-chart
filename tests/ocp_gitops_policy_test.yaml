@@ -95,3 +95,110 @@ tests:
         equal:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.channel
           value: gitops-priority
+
+  - it: Should have only the default Subscription healthcheck when no extra healthchecks are configured
+    values:
+      - ./clusterselector_values.yaml
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy-argocd
+        lengthEqual:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.resourceHealthChecks
+          count: 1
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy-argocd
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.resourceHealthChecks[0].group
+          value: operators.coreos.com
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy-argocd
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.resourceHealthChecks[0].kind
+          value: Subscription
+
+  - it: Should append a single extra resource healthcheck
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      acm:
+        extraResourceHealthChecks:
+          - group: argoproj.io
+            kind: Application
+            check: |
+              hs = {}
+              hs.status = "Healthy"
+              return hs
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy-argocd
+        lengthEqual:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.resourceHealthChecks
+          count: 2
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy-argocd
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.resourceHealthChecks[0].group
+          value: operators.coreos.com
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy-argocd
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.resourceHealthChecks[1].group
+          value: argoproj.io
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy-argocd
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.resourceHealthChecks[1].kind
+          value: Application
+
+  - it: Should append multiple extra resource healthchecks
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      acm:
+        extraResourceHealthChecks:
+          - group: argoproj.io
+            kind: Application
+            check: |
+              hs = {}
+              hs.status = "Healthy"
+              return hs
+          - group: batch
+            kind: Job
+            check: |
+              hs = {}
+              if obj.status.succeeded == 1 then
+                hs.status = "Healthy"
+              end
+              return hs
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy-argocd
+        lengthEqual:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.resourceHealthChecks
+          count: 3
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy-argocd
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.resourceHealthChecks[1].group
+          value: argoproj.io
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy-argocd
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.resourceHealthChecks[2].group
+          value: batch
+      - documentSelector:
+          path: metadata.name
+          value: group-one-gitops-policy-argocd
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[0].objectDefinition.spec.resourceHealthChecks[2].kind
+          value: Job

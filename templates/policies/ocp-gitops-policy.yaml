@@ -271,6 +271,12 @@ spec:
                       kind: Subscription
                       check: |
 {{- include "acm.subscription.healthcheck.lua" . | nindent 24 }}
+{{- range $.Values.acm.extraResourceHealthChecks }}
+                    - group: {{ .group }}
+                      kind: {{ .kind }}
+                      check: |
+{{ .check | nindent 24 }}
+{{- end }}
                   server:
                     autoscale:
                       enabled: false
