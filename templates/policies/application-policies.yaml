@@ -1,6 +1,10 @@
 # TODO: Also create a GitOpsCluster.apps.open-cluster-management.io
 {{- range .Values.clusterGroup.managedClusterGroups }}
 {{- $group := . }}
+{{- $argoDestNamespace := (printf "%s-%s" $.Values.global.pattern .name) -}}
+{{- if $.Values.global.singleArgoCD }}
+{{- $argoDestNamespace = $.Values.global.vpArgoNamespace -}}
+{{- end }}
 {{- if ($.Values.global.deletePattern | eq "DeleteSpoke" ) }}
 {{- else }}
 apiVersion: policy.open-cluster-management.io/v1
@@ -53,6 +57,8 @@ spec:
                 metadata:
                   name: {{ $.Values.global.pattern }}-{{ .name }}
                   namespace: {{ $.Values.global.vpArgoNamespace }}
+                  annotations:
+                    notice.argocd.argoproj.io/severity: critical
                   finalizers:
                   - resources-finalizer.argocd.argoproj.io/foreground
                 spec:
@@ -148,7 +154,10 @@ spec:
                   {{- end }}{{/* if $.Values.global.multiSourceSupport */}}
                   destination:
                     server: https://kubernetes.default.svc
-                    namespace: {{ $.Values.global.pattern }}-{{ .name }}
+                    namespace: {{ $argoDestNamespace }}
+                  info:
+                    - name: "VP"
+                      value: "https://validatedpatterns.io APP OF APPS"
                   syncPolicy:
                     automated:
                     {{- if ($.Values.global.deletePattern | ne "none" ) }}
