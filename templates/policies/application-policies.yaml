@@ -58,7 +58,8 @@ spec:
                   name: {{ $.Values.global.pattern }}-{{ .name }}
                   namespace: {{ $.Values.global.vpArgoNamespace }}
                   annotations:
-                    notice.argocd.argoproj.io/severity: critical
+                    notice.argocd.argoproj.io/severity: info
+                    notice.argocd.argoproj.io/content: "App of Apps"
                   finalizers:
                   - resources-finalizer.argocd.argoproj.io/foreground
                 spec:
