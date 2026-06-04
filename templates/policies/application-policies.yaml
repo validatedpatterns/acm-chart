@@ -60,6 +60,8 @@ spec:
                   annotations:
                     notice.argocd.argoproj.io/severity: info
                     notice.argocd.argoproj.io/content: "App of Apps"
+                  labels:
+                    validatedpatterns.io/pattern: {{ $.Values.global.pattern }}
                   finalizers:
                   - resources-finalizer.argocd.argoproj.io/foreground
                 spec:
