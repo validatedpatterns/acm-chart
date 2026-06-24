@@ -1,0 +1,146 @@
+suite: Test application-policies edge cases
+templates:
+  - templates/policies/application-policies.yaml
+release:
+  name: release-test
+tests:
+  - it: should use vpArgoNamespace as destination namespace when singleArgoCD is true
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        singleArgoCD: true
+        vpArgoNamespace: custom-argocd
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.destination.namespace
+          value: custom-argocd
+
+  - it: should use pattern-name namespace as destination when singleArgoCD is false
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        singleArgoCD: false
+        pattern: multicloud-gitops
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.destination.namespace
+          value: multicloud-gitops-group-one
+
+  - it: should include helmOverrides in non-multisource mode
+    values:
+      - ./clusterselector_values.yaml
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        contains:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.source.helm.parameters
+          content:
+            name: clusterGroup.isHubCluster
+            value: "false"
+
+  - it: should use per-group repoURL when specified
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          exampleRegion:
+            name: group-one
+            repoURL: https://github.com/custom/repo
+            acmlabels:
+              - name: clusterGroup
+                value: group-one
+            helmOverrides:
+              - name: clusterGroup.isHubCluster
+                value: false
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.source.repoURL
+          value: https://github.com/custom/repo
+
+  - it: should set prune to true when deletePattern is not none
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        deletePattern: DeleteChildApps
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.automated.prune
+          value: true
+
+  - it: should set prune to false when deletePattern is none
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        deletePattern: none
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.automated.prune
+          value: false
+
+  - it: should set pruneObjectBehavior when deletePattern is DeleteChildApps
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        deletePattern: DeleteChildApps
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.pruneObjectBehavior
+          value: DeleteIfCreated
+
+  - it: should use custom applicationRetryLimit
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        options:
+          applicationRetryLimit: 5
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.limit
+          value: 5

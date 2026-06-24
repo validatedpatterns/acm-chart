@@ -1,0 +1,59 @@
+suite: Test ManagedClusterSetBinding
+templates:
+  - templates/policies/managedclustersetbinding.yaml
+release:
+  name: release-test
+tests:
+  - it: should render ManagedClusterSetBinding when managedClusterGroups is set
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ManagedClusterSetBinding
+      - isAPIVersion:
+          of: cluster.open-cluster-management.io/v1beta2
+      - equal:
+          path: metadata.name
+          value: default
+      - equal:
+          path: spec.clusterSet
+          value: default
+      - equal:
+          path: metadata.annotations["argocd.argoproj.io/sync-options"]
+          value: SkipDryRunOnMissingResource=true
+
+  - it: should not render when managedClusterGroups is empty
+    set:
+      clusterGroup:
+        managedClusterGroups: {}
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not render when managedClusterGroups is null
+    set:
+      clusterGroup:
+        managedClusterGroups: null
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render exactly one document even with multiple groups
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          groupOne:
+            name: region-one
+          groupTwo:
+            name: region-two
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: default

@@ -1,0 +1,246 @@
+suite: Test ClusterPool provisioning
+templates:
+  - templates/provision/clusterpool.yaml
+release:
+  name: release-test
+tests:
+  - it: should not render when no clusterPools defined
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render ClusterPool for AWS with no clusters
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            clusterPools:
+              testPool:
+                name: spoke
+                openshiftVersion: "4.14.10"
+                baseDomain: example.com
+                platform:
+                  aws:
+                    region: us-east-1
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ClusterPool
+      - equal:
+          path: metadata.name
+          value: spoke-region-one
+      - equal:
+          path: spec.baseDomain
+          value: example.com
+      - equal:
+          path: spec.size
+          value: 0
+      - equal:
+          path: spec.runningCount
+          value: 0
+      - equal:
+          path: spec.platform.aws.region
+          value: us-east-1
+      - equal:
+          path: spec.platform.aws.credentialsSecretRef.name
+          value: spoke-region-one-creds
+      - equal:
+          path: spec.imageSetRef.name
+          value: img4.14.10-multi-appsub
+      - equal:
+          path: spec.pullSecretRef.name
+          value: spoke-region-one-pull-secret
+      - equal:
+          path: spec.installConfigSecretTemplateRef.name
+          value: spoke-region-one-install-config
+      - equal:
+          path: spec.skipMachinePools
+          value: true
+      - equal:
+          path: metadata.labels.cloud
+          value: aws
+      - equal:
+          path: metadata.labels["cluster.open-cluster-management.io/clusterset"]
+          value: region-one
+
+  - it: should render ClusterPool for Azure
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-two
+            clusterPools:
+              testPool:
+                name: azpool
+                openshiftVersion: "4.15.2"
+                baseDomain: azure.example.com
+                platform:
+                  azure:
+                    baseDomainResourceGroupName: dns-zones
+                    region: eastus
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: spec.platform.azure.region
+          value: eastus
+      - equal:
+          path: metadata.labels.cloud
+          value: azure
+
+  - it: should render ClusterPool and ClusterClaims when clusters are specified
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            clusterPools:
+              testPool:
+                name: spoke
+                openshiftVersion: "4.14.10"
+                baseDomain: example.com
+                platform:
+                  aws:
+                    region: us-east-1
+                clusters:
+                  - spoke1
+                  - spoke2
+    asserts:
+      - hasDocuments:
+          count: 3
+      - documentIndex: 0
+        isKind:
+          of: ClusterPool
+      - documentIndex: 0
+        equal:
+          path: spec.size
+          value: 2
+      - documentIndex: 0
+        equal:
+          path: spec.runningCount
+          value: 2
+      - documentIndex: 1
+        isKind:
+          of: ClusterClaim
+      - documentIndex: 1
+        equal:
+          path: metadata.name
+          value: spoke1-region-one
+      - documentIndex: 1
+        equal:
+          path: spec.clusterPoolName
+          value: spoke-region-one
+      - documentIndex: 2
+        isKind:
+          of: ClusterClaim
+      - documentIndex: 2
+        equal:
+          path: metadata.name
+          value: spoke2-region-one
+
+  - it: should use explicit size when provided
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            clusterPools:
+              testPool:
+                name: spoke
+                openshiftVersion: "4.14.10"
+                baseDomain: example.com
+                size: 5
+                platform:
+                  aws:
+                    region: us-east-1
+                clusters:
+                  - spoke1
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: spec.size
+          value: 5
+      - documentIndex: 0
+        equal:
+          path: spec.runningCount
+          value: 1
+
+  - it: should use acmlabels on ClusterClaim when specified as list
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            acmlabels:
+              - name: environment
+                value: staging
+            clusterPools:
+              testPool:
+                name: spoke
+                openshiftVersion: "4.14.10"
+                baseDomain: example.com
+                platform:
+                  aws:
+                    region: us-east-1
+                clusters:
+                  - spoke1
+    asserts:
+      - documentIndex: 1
+        equal:
+          path: metadata.labels.environment
+          value: staging
+
+  - it: should use default clusterGroup label on ClusterClaim when no acmlabels
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            clusterPools:
+              testPool:
+                name: spoke
+                openshiftVersion: "4.14.10"
+                baseDomain: example.com
+                platform:
+                  aws:
+                    region: us-east-1
+                clusters:
+                  - spoke1
+    asserts:
+      - documentIndex: 1
+        equal:
+          path: metadata.labels.clusterGroup
+          value: region-one
+
+  - it: should have correct sync-wave annotations
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            clusterPools:
+              testPool:
+                name: spoke
+                openshiftVersion: "4.14.10"
+                baseDomain: example.com
+                platform:
+                  aws:
+                    region: us-east-1
+                clusters:
+                  - spoke1
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: metadata.annotations["argocd.argoproj.io/sync-wave"]
+          value: "10"
+      - documentIndex: 1
+        equal:
+          path: metadata.annotations["argocd.argoproj.io/sync-wave"]
+          value: "20"

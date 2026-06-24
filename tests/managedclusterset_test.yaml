@@ -1,0 +1,121 @@
+suite: Test ManagedClusterSet provisioning
+templates:
+  - templates/provision/managedclusterset.yaml
+release:
+  name: release-test
+tests:
+  - it: should not render when no clusterPools or clusterDeployments defined
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render ManagedClusterSet when clusterPools is defined
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            clusterPools:
+              testPool:
+                name: spoke
+                openshiftVersion: "4.14.10"
+                baseDomain: example.com
+                platform:
+                  aws:
+                    region: us-east-1
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ManagedClusterSet
+      - isAPIVersion:
+          of: cluster.open-cluster-management.io/v1beta2
+      - equal:
+          path: metadata.name
+          value: region-one
+      - equal:
+          path: metadata.annotations["cluster.open-cluster-management.io/submariner-broker-ns"]
+          value: region-one-broker
+      - equal:
+          path: metadata.annotations["argocd.argoproj.io/sync-options"]
+          value: SkipDryRunOnMissingResource=true
+
+  - it: should render ManagedClusterSet when clusterDeployments is defined
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-two
+            clusterDeployments:
+              myCluster:
+                name: cluster1
+                baseDomain: example.com
+                openshiftVersion: "4.14.10"
+                platform:
+                  aws:
+                    region: us-east-1
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: region-two
+
+  - it: should render one ManagedClusterSet per group with both pools and deployments
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            clusterPools:
+              testPool:
+                name: spoke
+                openshiftVersion: "4.14.10"
+                baseDomain: example.com
+                platform:
+                  aws:
+                    region: us-east-1
+            clusterDeployments:
+              myCluster:
+                name: cluster1
+                baseDomain: example.com
+                openshiftVersion: "4.14.10"
+                platform:
+                  aws:
+                    region: us-east-1
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: should render multiple ManagedClusterSets for multiple groups with pools
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          groupOne:
+            name: region-one
+            clusterPools:
+              testPool:
+                name: spoke
+                openshiftVersion: "4.14.10"
+                baseDomain: example.com
+                platform:
+                  aws:
+                    region: us-east-1
+          groupTwo:
+            name: region-two
+            clusterDeployments:
+              myCluster:
+                name: cluster1
+                baseDomain: example.com
+                openshiftVersion: "4.14.10"
+                platform:
+                  aws:
+                    region: us-west-2
+    asserts:
+      - hasDocuments:
+          count: 2
