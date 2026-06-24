@@ -1,0 +1,287 @@
+suite: Test ClusterDeployment provisioning
+templates:
+  - templates/provision/clusterdeployment.yaml
+release:
+  name: release-test
+tests:
+  - it: should not render when no clusterDeployments defined
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render Namespace, ClusterDeployment, and ManagedCluster for AWS
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            clusterDeployments:
+              myCluster:
+                name: cluster1
+                baseDomain: example.com
+                openshiftVersion: "4.14.10"
+                platform:
+                  aws:
+                    region: us-east-1
+    asserts:
+      - hasDocuments:
+          count: 3
+      - documentIndex: 0
+        isKind:
+          of: Namespace
+      - documentIndex: 0
+        equal:
+          path: metadata.name
+          value: cluster1-region-one
+      - documentIndex: 1
+        isKind:
+          of: ClusterDeployment
+      - documentIndex: 1
+        equal:
+          path: metadata.name
+          value: cluster1-region-one
+      - documentIndex: 1
+        equal:
+          path: metadata.namespace
+          value: cluster1-region-one
+      - documentIndex: 1
+        equal:
+          path: spec.baseDomain
+          value: example.com
+      - documentIndex: 1
+        equal:
+          path: spec.clusterName
+          value: cluster1-region-one
+      - documentIndex: 1
+        equal:
+          path: spec.platform.aws.region
+          value: us-east-1
+      - documentIndex: 1
+        equal:
+          path: spec.platform.aws.credentialsSecretRef.name
+          value: cluster1-region-one-creds
+      - documentIndex: 1
+        equal:
+          path: spec.provisioning.imageSetRef.name
+          value: img4.14.10-multi-appsub
+      - documentIndex: 1
+        equal:
+          path: spec.provisioning.installConfigSecretRef.name
+          value: cluster1-region-one-install-config
+      - documentIndex: 1
+        equal:
+          path: spec.provisioning.sshPrivateKeySecretRef.name
+          value: cluster1-region-one-ssh-private-key
+      - documentIndex: 1
+        equal:
+          path: spec.pullSecretRef.name
+          value: cluster1-region-one-pull-secret
+
+  - it: should render correctly for Azure platform
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-two
+            clusterDeployments:
+              myCluster:
+                name: azcluster
+                baseDomain: azure.example.com
+                openshiftVersion: "4.15.2"
+                platform:
+                  azure:
+                    baseDomainResourceGroupName: dns-zones
+                    region: eastus
+    asserts:
+      - hasDocuments:
+          count: 3
+      - documentIndex: 1
+        equal:
+          path: spec.platform.azure.region
+          value: eastus
+      - documentIndex: 1
+        equal:
+          path: spec.platform.azure.credentialsSecretRef.name
+          value: azcluster-region-two-creds
+
+  - it: should set default clusterGroup label on ManagedCluster when no acmlabels
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            clusterDeployments:
+              myCluster:
+                name: cluster1
+                baseDomain: example.com
+                openshiftVersion: "4.14.10"
+                platform:
+                  aws:
+                    region: us-east-1
+    asserts:
+      - documentIndex: 2
+        isKind:
+          of: ManagedCluster
+      - documentIndex: 2
+        equal:
+          path: metadata.labels.clusterGroup
+          value: region-one
+      - documentIndex: 2
+        equal:
+          path: metadata.labels["cluster.open-cluster-management.io/clusterset"]
+          value: region-one
+      - documentIndex: 2
+        equal:
+          path: spec.hubAcceptsClient
+          value: true
+
+  - it: should use acmlabels on ManagedCluster when specified as list
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            acmlabels:
+              - name: environment
+                value: production
+              - name: region
+                value: us-east
+            clusterDeployments:
+              myCluster:
+                name: cluster1
+                baseDomain: example.com
+                openshiftVersion: "4.14.10"
+                platform:
+                  aws:
+                    region: us-east-1
+    asserts:
+      - documentIndex: 2
+        equal:
+          path: metadata.labels.environment
+          value: production
+      - documentIndex: 2
+        equal:
+          path: metadata.labels.region
+          value: us-east
+
+  - it: should use default label when acmlabels is empty
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            acmlabels: []
+            clusterDeployments:
+              myCluster:
+                name: cluster1
+                baseDomain: example.com
+                openshiftVersion: "4.14.10"
+                platform:
+                  aws:
+                    region: us-east-1
+    asserts:
+      - documentIndex: 2
+        equal:
+          path: metadata.labels.clusterGroup
+          value: region-one
+
+  - it: should render multiple clusters from the same group
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          testRegion:
+            name: region-one
+            clusterDeployments:
+              first:
+                name: cluster1
+                baseDomain: example.com
+                openshiftVersion: "4.14.10"
+                platform:
+                  aws:
+                    region: us-east-1
+              second:
+                name: cluster2
+                baseDomain: example.com
+                openshiftVersion: "4.14.10"
+                platform:
+                  aws:
+                    region: us-west-2
+    asserts:
+      - hasDocuments:
+          count: 6
+
+  - it: should render resources for multiple managedClusterGroups
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          groupOne:
+            name: east
+            clusterDeployments:
+              first:
+                name: cluster-east
+                baseDomain: east.example.com
+                openshiftVersion: "4.14.10"
+                platform:
+                  aws:
+                    region: us-east-1
+          groupTwo:
+            name: west
+            clusterDeployments:
+              first:
+                name: cluster-west
+                baseDomain: west.example.com
+                openshiftVersion: "4.15.2"
+                platform:
+                  azure:
+                    baseDomainResourceGroupName: dns-zones
+                    region: westus2
+    asserts:
+      - hasDocuments:
+          count: 6
+      - documentIndex: 0
+        isKind:
+          of: Namespace
+      - documentIndex: 0
+        equal:
+          path: metadata.name
+          value: cluster-east-east
+      - documentIndex: 1
+        isKind:
+          of: ClusterDeployment
+      - documentIndex: 1
+        equal:
+          path: spec.platform.aws.region
+          value: us-east-1
+      - documentIndex: 2
+        isKind:
+          of: ManagedCluster
+      - documentIndex: 2
+        equal:
+          path: metadata.labels["cluster.open-cluster-management.io/clusterset"]
+          value: east
+      - documentIndex: 3
+        isKind:
+          of: Namespace
+      - documentIndex: 3
+        equal:
+          path: metadata.name
+          value: cluster-west-west
+      - documentIndex: 4
+        isKind:
+          of: ClusterDeployment
+      - documentIndex: 4
+        equal:
+          path: spec.platform.azure.region
+          value: westus2
+      - documentIndex: 5
+        isKind:
+          of: ManagedCluster
+      - documentIndex: 5
+        equal:
+          path: metadata.labels["cluster.open-cluster-management.io/clusterset"]
+          value: west
