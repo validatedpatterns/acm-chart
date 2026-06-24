@@ -144,3 +144,103 @@ tests:
         equal:
           path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.limit
           value: 5
+
+  - it: should render separate resources for multiple managedClusterGroups
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+      clusterGroup:
+        managedClusterGroups:
+          groupOne:
+            name: east
+            acmlabels:
+              - name: clusterGroup
+                value: east
+            helmOverrides:
+              - name: clusterGroup.isHubCluster
+                value: false
+          groupTwo:
+            name: west
+            acmlabels:
+              - name: clusterGroup
+                value: west
+            helmOverrides:
+              - name: clusterGroup.isHubCluster
+                value: false
+    asserts:
+      - hasDocuments:
+          count: 6
+      - documentSelector:
+          path: metadata.name
+          value: east-clustergroup-policy
+        isKind:
+          of: Policy
+      - documentSelector:
+          path: metadata.name
+          value: west-clustergroup-policy
+        isKind:
+          of: Policy
+      - documentSelector:
+          path: metadata.name
+          value: east-placement-binding
+        isKind:
+          of: PlacementBinding
+      - documentSelector:
+          path: metadata.name
+          value: west-placement-binding
+        isKind:
+          of: PlacementBinding
+      - documentSelector:
+          path: metadata.name
+          value: east-placement
+        isKind:
+          of: Placement
+      - documentSelector:
+          path: metadata.name
+          value: west-placement
+        isKind:
+          of: Placement
+
+  - it: should set correct clusterGroup.name per group in multiple managedClusterGroups
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+      clusterGroup:
+        managedClusterGroups:
+          groupOne:
+            name: east
+            acmlabels:
+              - name: clusterGroup
+                value: east
+            helmOverrides:
+              - name: clusterGroup.isHubCluster
+                value: false
+          groupTwo:
+            name: west
+            acmlabels:
+              - name: clusterGroup
+                value: west
+            helmOverrides:
+              - name: clusterGroup.isHubCluster
+                value: false
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: east-clustergroup-policy
+        contains:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].helm.parameters
+          content:
+            name: clusterGroup.name
+            value: east
+      - documentSelector:
+          path: metadata.name
+          value: west-clustergroup-policy
+        contains:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.sources[1].helm.parameters
+          content:
+            name: clusterGroup.name
+            value: west

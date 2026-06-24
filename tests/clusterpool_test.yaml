@@ -244,3 +244,80 @@ tests:
         equal:
           path: metadata.annotations["argocd.argoproj.io/sync-wave"]
           value: "20"
+
+  - it: should render pools for multiple managedClusterGroups
+    set:
+      clusterGroup:
+        managedClusterGroups:
+          groupOne:
+            name: east
+            clusterPools:
+              awsPool:
+                name: pool-east
+                openshiftVersion: "4.14.10"
+                baseDomain: east.example.com
+                platform:
+                  aws:
+                    region: us-east-1
+                clusters:
+                  - east1
+          groupTwo:
+            name: west
+            clusterPools:
+              azurePool:
+                name: pool-west
+                openshiftVersion: "4.15.2"
+                baseDomain: west.example.com
+                platform:
+                  azure:
+                    baseDomainResourceGroupName: dns-zones
+                    region: westus2
+                clusters:
+                  - west1
+    asserts:
+      - hasDocuments:
+          count: 4
+      - documentSelector:
+          path: metadata.name
+          value: pool-east-east
+        isKind:
+          of: ClusterPool
+      - documentSelector:
+          path: metadata.name
+          value: pool-east-east
+        equal:
+          path: metadata.labels.cloud
+          value: aws
+      - documentSelector:
+          path: metadata.name
+          value: pool-west-west
+        isKind:
+          of: ClusterPool
+      - documentSelector:
+          path: metadata.name
+          value: pool-west-west
+        equal:
+          path: metadata.labels.cloud
+          value: azure
+      - documentSelector:
+          path: metadata.name
+          value: east1-east
+        isKind:
+          of: ClusterClaim
+      - documentSelector:
+          path: metadata.name
+          value: east1-east
+        equal:
+          path: spec.clusterPoolName
+          value: pool-east-east
+      - documentSelector:
+          path: metadata.name
+          value: west1-west
+        isKind:
+          of: ClusterClaim
+      - documentSelector:
+          path: metadata.name
+          value: west1-west
+        equal:
+          path: spec.clusterPoolName
+          value: pool-west-west
