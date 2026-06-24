@@ -1,0 +1,314 @@
+suite: Test private-repo-policies with single and multiple managedClusterGroups
+templates:
+  - templates/policies/private-repo-policies.yaml
+release:
+  name: release-test
+tests:
+  - it: should render exactly 3 documents for a single group on a spoke cluster
+    set:
+      global:
+        privateRepo: true
+        pattern: test-pattern
+        repoURL: https://github.com/test/repo
+      clusterGroup:
+        isHubCluster: false
+        managedClusterGroups:
+          groupOne:
+            name: region-one
+            acmlabels:
+              - name: clusterGroup
+                value: region-one
+    asserts:
+      - hasDocuments:
+          count: 3
+
+  - it: should render Policy PlacementBinding and PlacementRule for a single group
+    set:
+      global:
+        privateRepo: true
+        pattern: test-pattern
+        repoURL: https://github.com/test/repo
+      clusterGroup:
+        isHubCluster: false
+        managedClusterGroups:
+          groupOne:
+            name: region-one
+            acmlabels:
+              - name: clusterGroup
+                value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: private-region-one-policy
+        isKind:
+          of: Policy
+      - documentSelector:
+          path: metadata.name
+          value: private-region-one-placement-binding
+        isKind:
+          of: PlacementBinding
+      - documentSelector:
+          path: metadata.name
+          value: private-region-one-placement
+        isKind:
+          of: PlacementRule
+      - documentSelector:
+          path: metadata.name
+          value: private-region-one-placement
+        isAPIVersion:
+          of: apps.open-cluster-management.io/v1
+
+  - it: should have correct cluster selector on PlacementRule for a single group
+    set:
+      global:
+        privateRepo: true
+        pattern: test-pattern
+        repoURL: https://github.com/test/repo
+      clusterGroup:
+        isHubCluster: false
+        managedClusterGroups:
+          groupOne:
+            name: region-one
+            acmlabels:
+              - name: clusterGroup
+                value: region-one
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: private-region-one-placement
+        equal:
+          path: spec.clusterSelector.matchLabels.clusterGroup
+          value: region-one
+
+  - it: should render exactly 6 documents for two groups on a spoke cluster
+    set:
+      global:
+        privateRepo: true
+        pattern: test-pattern
+        repoURL: https://github.com/test/repo
+      clusterGroup:
+        isHubCluster: false
+        managedClusterGroups:
+          groupOne:
+            name: microserv-p1
+            acmlabels:
+              - name: clusterGroup
+                value: microserv-p1
+          groupTwo:
+            name: docserv-p1
+            acmlabels:
+              - name: clusterGroup
+                value: docserv-p1
+    asserts:
+      - hasDocuments:
+          count: 6
+
+  - it: should render separate Policy for each group with two groups
+    set:
+      global:
+        privateRepo: true
+        pattern: test-pattern
+        repoURL: https://github.com/test/repo
+      clusterGroup:
+        isHubCluster: false
+        managedClusterGroups:
+          groupOne:
+            name: microserv-p1
+            acmlabels:
+              - name: clusterGroup
+                value: microserv-p1
+          groupTwo:
+            name: docserv-p1
+            acmlabels:
+              - name: clusterGroup
+                value: docserv-p1
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: private-microserv-p1-policy
+        isKind:
+          of: Policy
+      - documentSelector:
+          path: metadata.name
+          value: private-docserv-p1-policy
+        isKind:
+          of: Policy
+
+  - it: should render separate PlacementBinding for each group with two groups
+    set:
+      global:
+        privateRepo: true
+        pattern: test-pattern
+        repoURL: https://github.com/test/repo
+      clusterGroup:
+        isHubCluster: false
+        managedClusterGroups:
+          groupOne:
+            name: microserv-p1
+            acmlabels:
+              - name: clusterGroup
+                value: microserv-p1
+          groupTwo:
+            name: docserv-p1
+            acmlabels:
+              - name: clusterGroup
+                value: docserv-p1
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: private-microserv-p1-placement-binding
+        isKind:
+          of: PlacementBinding
+      - documentSelector:
+          path: metadata.name
+          value: private-docserv-p1-placement-binding
+        isKind:
+          of: PlacementBinding
+
+  - it: should render separate PlacementRule for each group with two groups
+    set:
+      global:
+        privateRepo: true
+        pattern: test-pattern
+        repoURL: https://github.com/test/repo
+      clusterGroup:
+        isHubCluster: false
+        managedClusterGroups:
+          groupOne:
+            name: microserv-p1
+            acmlabels:
+              - name: clusterGroup
+                value: microserv-p1
+          groupTwo:
+            name: docserv-p1
+            acmlabels:
+              - name: clusterGroup
+                value: docserv-p1
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: private-microserv-p1-placement
+        isKind:
+          of: PlacementRule
+      - documentSelector:
+          path: metadata.name
+          value: private-microserv-p1-placement
+        isAPIVersion:
+          of: apps.open-cluster-management.io/v1
+      - documentSelector:
+          path: metadata.name
+          value: private-docserv-p1-placement
+        isKind:
+          of: PlacementRule
+      - documentSelector:
+          path: metadata.name
+          value: private-docserv-p1-placement
+        isAPIVersion:
+          of: apps.open-cluster-management.io/v1
+
+  - it: should have correct cluster selector on each PlacementRule with two groups
+    set:
+      global:
+        privateRepo: true
+        pattern: test-pattern
+        repoURL: https://github.com/test/repo
+      clusterGroup:
+        isHubCluster: false
+        managedClusterGroups:
+          groupOne:
+            name: microserv-p1
+            acmlabels:
+              - name: clusterGroup
+                value: microserv-p1
+          groupTwo:
+            name: docserv-p1
+            acmlabels:
+              - name: clusterGroup
+                value: docserv-p1
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: private-microserv-p1-placement
+        equal:
+          path: spec.clusterSelector.matchLabels.clusterGroup
+          value: microserv-p1
+      - documentSelector:
+          path: metadata.name
+          value: private-docserv-p1-placement
+        equal:
+          path: spec.clusterSelector.matchLabels.clusterGroup
+          value: docserv-p1
+
+  - it: should render exactly 9 documents for two groups on a hub cluster
+    set:
+      global:
+        privateRepo: true
+        pattern: test-pattern
+        repoURL: https://github.com/test/repo
+      clusterGroup:
+        isHubCluster: true
+        managedClusterGroups:
+          groupOne:
+            name: microserv-p1
+            acmlabels:
+              - name: clusterGroup
+                value: microserv-p1
+          groupTwo:
+            name: docserv-p1
+            acmlabels:
+              - name: clusterGroup
+                value: docserv-p1
+    asserts:
+      - hasDocuments:
+          count: 9
+
+  - it: should include hub policy alongside both group policies on hub with two groups
+    set:
+      global:
+        privateRepo: true
+        pattern: test-pattern
+        repoURL: https://github.com/test/repo
+      clusterGroup:
+        isHubCluster: true
+        managedClusterGroups:
+          groupOne:
+            name: microserv-p1
+            acmlabels:
+              - name: clusterGroup
+                value: microserv-p1
+          groupTwo:
+            name: docserv-p1
+            acmlabels:
+              - name: clusterGroup
+                value: docserv-p1
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: private-microserv-p1-policy
+        isKind:
+          of: Policy
+      - documentSelector:
+          path: metadata.name
+          value: private-microserv-p1-placement
+        isKind:
+          of: PlacementRule
+      - documentSelector:
+          path: metadata.name
+          value: private-docserv-p1-policy
+        isKind:
+          of: Policy
+      - documentSelector:
+          path: metadata.name
+          value: private-docserv-p1-placement
+        isKind:
+          of: PlacementRule
+      - documentSelector:
+          path: metadata.name
+          value: vp-private-hub-policy
+        isKind:
+          of: Policy
+      - documentSelector:
+          path: metadata.name
+          value: vp-private-hub-placement
+        isKind:
+          of: PlacementRule
