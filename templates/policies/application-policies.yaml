@@ -171,6 +171,12 @@ spec:
                       selfHeal: true
                     retry:
                       limit: {{ default 20 $.Values.global.options.applicationRetryLimit }}
+                      {{- with $.Values.global.options.applicationRetryBackoff }}
+                      backoff:
+                        duration: {{ .duration | quote }}
+                        factor: {{ .factor }}
+                        maxDuration: {{ .maxDuration | quote }}
+                      {{- end }}
                   ignoreDifferences:
                   - group: apps
                     kind: Deployment
