@@ -1,0 +1,329 @@
+suite: Test application retry backoff configuration
+templates:
+  - templates/policies/application-policies.yaml
+release:
+  name: release-test
+tests:
+
+  - it: should not render backoff when applicationRetryBackoff is not set
+    values:
+      - ./clusterselector_values.yaml
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.limit
+          value: 20
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        isNull:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff
+
+  - it: should not render backoff when applicationRetryBackoff is not set (multisource)
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.limit
+          value: 20
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        isNull:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff
+
+  - it: should render backoff when applicationRetryBackoff is set
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        options:
+          applicationRetryBackoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 5m
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.duration
+          value: "10s"
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.factor
+          value: 2
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.maxDuration
+          value: "5m"
+
+  - it: should render backoff when applicationRetryBackoff is set (multisource)
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+        options:
+          applicationRetryBackoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 5m
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.duration
+          value: "10s"
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.factor
+          value: 2
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.maxDuration
+          value: "5m"
+
+  - it: should render backoff with custom retry limit
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        options:
+          applicationRetryLimit: 10
+          applicationRetryBackoff:
+            duration: 15s
+            factor: 3
+            maxDuration: 10m
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.limit
+          value: 10
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.duration
+          value: "15s"
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.factor
+          value: 3
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.maxDuration
+          value: "10m"
+
+  - it: should render backoff for all groups in multiple managedClusterGroups
+    set:
+      global:
+        multiSourceSupport: true
+        multiSourceRepoUrl: "https://charts.example.com"
+        multiSourceTargetRevision: "0.1.0"
+        options:
+          applicationRetryBackoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 5m
+      clusterGroup:
+        managedClusterGroups:
+          groupOne:
+            name: east
+            acmlabels:
+              - name: clusterGroup
+                value: east
+            helmOverrides:
+              - name: clusterGroup.isHubCluster
+                value: false
+          groupTwo:
+            name: west
+            acmlabels:
+              - name: clusterGroup
+                value: west
+            helmOverrides:
+              - name: clusterGroup.isHubCluster
+                value: false
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: east-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.duration
+          value: "10s"
+      - documentSelector:
+          path: metadata.name
+          value: east-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.factor
+          value: 2
+      - documentSelector:
+          path: metadata.name
+          value: east-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.maxDuration
+          value: "5m"
+      - documentSelector:
+          path: metadata.name
+          value: west-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.duration
+          value: "10s"
+      - documentSelector:
+          path: metadata.name
+          value: west-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.factor
+          value: 2
+      - documentSelector:
+          path: metadata.name
+          value: west-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.maxDuration
+          value: "5m"
+
+  - it: should preserve default retry limit when only backoff is configured
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        options:
+          applicationRetryBackoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.limit
+          value: 20
+
+  - it: should render backoff with factor 1 (linear backoff)
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        options:
+          applicationRetryBackoff:
+            duration: 30s
+            factor: 1
+            maxDuration: 30s
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.duration
+          value: "30s"
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.factor
+          value: 1
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.maxDuration
+          value: "30s"
+
+  - it: should not render backoff when deletePattern is DeleteSpoke (no documents rendered)
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        deletePattern: DeleteSpoke
+        options:
+          applicationRetryBackoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 5m
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render backoff alongside prune true when deletePattern is set
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        deletePattern: DeleteChildApps
+        options:
+          applicationRetryBackoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 5m
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.automated.prune
+          value: true
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.duration
+          value: "10s"
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.factor
+          value: 2
+
+  - it: should render backoff alongside prune false when deletePattern is none
+    values:
+      - ./clusterselector_values.yaml
+    set:
+      global:
+        deletePattern: none
+        options:
+          applicationRetryBackoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 5m
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.automated.prune
+          value: false
+      - documentSelector:
+          path: metadata.name
+          value: group-one-clustergroup-policy
+        equal:
+          path: spec.policy-templates[0].objectDefinition.spec.object-templates[1].objectDefinition.spec.syncPolicy.retry.backoff.duration
+          value: "10s"

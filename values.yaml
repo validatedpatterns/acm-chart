@@ -16,6 +16,10 @@ global:
   targetRevision: main
   options:
     applicationRetryLimit: 20
+    # applicationRetryBackoff:
+    #   duration: 10s
+    #   factor: 2
+    #   maxDuration: 5m
   secretStore:
     backend: "vault"
 
