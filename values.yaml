@@ -100,6 +100,15 @@ acm:
     # -- Default gitops channel to install on remote clusters
     channel: "gitops-1.21"
 
+  # -- Bring-your-own clusters to auto-import into ACM using kubeconfigs from Vault.
+  # Each entry needs secretName (must end with `_cluster_kubeconfig`) and clusterGroup
+  # (value for the ManagedCluster `clusterGroup` label). The ManagedCluster name is
+  # derived by stripping the `_cluster_kubeconfig` suffix from secretName.
+  # Example:
+  #   - secretName: mcg-primary_cluster_kubeconfig
+  #     clusterGroup: group-one
+  # @default -- empty list (feature disabled)
+  importedClusters: []
 
 # -- Default secretstore configuration variables
 # @default -- depends on the individual settings

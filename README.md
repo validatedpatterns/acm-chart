@@ -1,6 +1,6 @@
 # acm
 
-![Version: 0.2.11](https://img.shields.io/badge/Version-0.2.11-informational?style=flat-square)
+![Version: 0.2.12](https://img.shields.io/badge/Version-0.2.12-informational?style=flat-square)
 
 A Helm chart to configure Advanced Cluster Manager for OpenShift.
 
@@ -12,6 +12,7 @@ This chart is used by the Validated Patterns to configure ACM and manage remote 
 |-----|------|---------|-------------|
 | acm.customArgoYaml | object | empty dict (no overrides) | Custom overrides for the spoke ArgoCD instance spec. Keys are deep-merged into the default spec (maps merge, lists replace). |
 | acm.extraResourceHealthChecks | list | empty list | Extra resource health checks to add to the spoke ArgoCD instance. Each entry needs group, kind, and check (Lua script) fields. |
+| acm.importedClusters | list | empty list (feature disabled) | Bring-your-own clusters to auto-import into ACM using kubeconfigs from Vault. Each entry needs secretName (must end with `_cluster_kubeconfig`) and clusterGroup (value for the ManagedCluster `clusterGroup` label). The ManagedCluster name is derived by stripping the `_cluster_kubeconfig` suffix from secretName. Example:   - secretName: mcg-primary_cluster_kubeconfig     clusterGroup: group-one |
 | acm.mce_operator | object | Uses the official redhat sources | Just used for IIB testing, drives the source and channel for the MCE subscription triggered by ACM |
 | acm.mch_spec | object | `{}` | MultiClusterHub spec (empty by default) |
 | acm.spokeGitops.channel | string | `"gitops-1.21"` | Default gitops channel to install on remote clusters |
