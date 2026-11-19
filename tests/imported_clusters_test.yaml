@@ -1,0 +1,190 @@
+suite: Test ACM BYOC imported clusters
+templates:
+  - templates/provision/imported-clusters.yaml
+release:
+  name: release-test
+tests:
+  - it: should not render when importedClusters is empty
+    set:
+      acm:
+        importedClusters: []
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not render when importedClusters is unset
+    set:
+      acm:
+        importedClusters: null
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render Namespace, ManagedCluster, ExternalSecret, and KlusterletAddonConfig
+    set:
+      acm:
+        importedClusters:
+          - secretName: mcg-primary_cluster_kubeconfig
+            clusterGroup: group-one
+    asserts:
+      - hasDocuments:
+          count: 4
+      - documentIndex: 0
+        isKind:
+          of: Namespace
+      - documentIndex: 0
+        equal:
+          path: metadata.name
+          value: mcg-primary
+      - documentIndex: 1
+        isKind:
+          of: ManagedCluster
+      - documentIndex: 1
+        equal:
+          path: metadata.name
+          value: mcg-primary
+      - documentIndex: 1
+        equal:
+          path: metadata.labels.clusterGroup
+          value: group-one
+      - documentIndex: 1
+        isNull:
+          path: metadata.labels.cloud
+      - documentIndex: 1
+        isNull:
+          path: metadata.labels.vendor
+      - documentIndex: 1
+        equal:
+          path: spec.hubAcceptsClient
+          value: true
+      - documentIndex: 1
+        equal:
+          path: spec.leaseDurationSeconds
+          value: 60
+      - documentIndex: 1
+        equal:
+          path: metadata.annotations["argocd.argoproj.io/sync-options"]
+          value: SkipDryRunOnMissingResource=true,RespectIgnoreDifferences=true
+      - documentIndex: 2
+        isKind:
+          of: ExternalSecret
+
+      - documentIndex: 2
+        equal:
+          path: metadata.name
+          value: mcg-primary-auto-import
+      - documentIndex: 2
+        equal:
+          path: metadata.namespace
+          value: mcg-primary
+      - documentIndex: 2
+        equal:
+          path: spec.target.name
+          value: auto-import-secret
+      - documentIndex: 2
+        equal:
+          path: spec.data[0].remoteRef.key
+          value: secret/data/hub/mcg-primary_cluster_kubeconfig
+      - documentIndex: 2
+        equal:
+          path: spec.data[0].remoteRef.property
+          value: kubeconfig
+      - documentIndex: 2
+        equal:
+          path: spec.secretStoreRef.name
+          value: vault-backend
+      - documentIndex: 2
+        equal:
+          path: spec.secretStoreRef.kind
+          value: ClusterSecretStore
+      - documentIndex: 2
+        equal:
+          path: spec.target.template.data.autoImportRetry
+          value: "5"
+      - documentIndex: 3
+        isKind:
+          of: KlusterletAddonConfig
+      - documentIndex: 3
+        equal:
+          path: metadata.name
+          value: mcg-primary
+      - documentIndex: 3
+        equal:
+          path: metadata.namespace
+          value: mcg-primary
+      - documentIndex: 3
+        equal:
+          path: spec.clusterName
+          value: mcg-primary
+      - documentIndex: 3
+        equal:
+          path: spec.clusterNamespace
+          value: mcg-primary
+      - documentIndex: 3
+        equal:
+          path: spec.applicationManager.enabled
+          value: true
+      - documentIndex: 3
+        equal:
+          path: spec.policyController.enabled
+          value: true
+      - documentIndex: 3
+        equal:
+          path: spec.searchCollector.enabled
+          value: true
+      - documentIndex: 3
+        equal:
+          path: spec.certPolicyController.enabled
+          value: true
+
+  - it: should render resources for multiple imported clusters
+    set:
+      acm:
+        importedClusters:
+          - secretName: mcg-primary_cluster_kubeconfig
+            clusterGroup: group-one
+          - secretName: mcg-secondary_cluster_kubeconfig
+            clusterGroup: group-one
+    asserts:
+      - hasDocuments:
+          count: 8
+      - documentIndex: 0
+        equal:
+          path: metadata.name
+          value: mcg-primary
+      - documentIndex: 4
+        equal:
+          path: metadata.name
+          value: mcg-secondary
+      - documentIndex: 5
+        equal:
+          path: metadata.labels.clusterGroup
+          value: group-one
+
+  - it: should fail when secretName does not end with _cluster_kubeconfig
+    set:
+      acm:
+        importedClusters:
+          - secretName: mcg-primary-kubeconfig
+            clusterGroup: group-one
+    asserts:
+      - failedTemplate:
+          errorMessage: acm.importedClusters secretName "mcg-primary-kubeconfig" must end with "_cluster_kubeconfig"
+
+  - it: should fail when clusterGroup is missing
+    set:
+      acm:
+        importedClusters:
+          - secretName: mcg-primary_cluster_kubeconfig
+    asserts:
+      - failedTemplate:
+          errorMessage: acm.importedClusters entry for secretName "mcg-primary_cluster_kubeconfig" is missing required field clusterGroup
+
+  - it: should fail when secretName is missing
+    set:
+      acm:
+        importedClusters:
+          - clusterGroup: group-one
+    asserts:
+      - failedTemplate:
+          errorMessage: acm.importedClusters entry is missing required field secretName
