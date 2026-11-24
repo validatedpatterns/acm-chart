@@ -14,7 +14,7 @@ tests:
       - hasDocuments:
           count: 0
 
-  - it: should render Namespace, ClusterDeployment, and ManagedCluster for AWS
+  - it: should render Namespace, ClusterDeployment, ManagedCluster, and KlusterletAddonConfig for AWS
     set:
       clusterGroup:
         managedClusterGroups:
@@ -30,7 +30,7 @@ tests:
                     region: us-east-1
     asserts:
       - hasDocuments:
-          count: 3
+          count: 4
       - documentIndex: 0
         isKind:
           of: Namespace
@@ -81,6 +81,21 @@ tests:
         equal:
           path: spec.pullSecretRef.name
           value: cluster1-region-one-pull-secret
+      - documentIndex: 3
+        isKind:
+          of: KlusterletAddonConfig
+      - documentIndex: 3
+        equal:
+          path: metadata.name
+          value: cluster1-region-one
+      - documentIndex: 3
+        equal:
+          path: metadata.namespace
+          value: cluster1-region-one
+      - documentIndex: 3
+        equal:
+          path: spec.policyController.enabled
+          value: true
 
   - it: should render correctly for Azure platform
     set:
@@ -99,7 +114,7 @@ tests:
                     region: eastus
     asserts:
       - hasDocuments:
-          count: 3
+          count: 4
       - documentIndex: 1
         equal:
           path: spec.platform.azure.region
@@ -139,6 +154,14 @@ tests:
         equal:
           path: spec.hubAcceptsClient
           value: true
+      - documentIndex: 2
+        equal:
+          path: spec.leaseDurationSeconds
+          value: 60
+      - documentIndex: 2
+        equal:
+          path: metadata.annotations["argocd.argoproj.io/sync-options"]
+          value: SkipDryRunOnMissingResource=true,RespectIgnoreDifferences=true
 
   - it: should use acmlabels on ManagedCluster when specified as list
     set:
@@ -213,7 +236,7 @@ tests:
                     region: us-west-2
     asserts:
       - hasDocuments:
-          count: 6
+          count: 8
 
   - it: should render resources for multiple managedClusterGroups
     set:
@@ -242,7 +265,7 @@ tests:
                     region: westus2
     asserts:
       - hasDocuments:
-          count: 6
+          count: 8
       - documentIndex: 0
         isKind:
           of: Namespace
@@ -266,22 +289,28 @@ tests:
           value: east
       - documentIndex: 3
         isKind:
+          of: KlusterletAddonConfig
+      - documentIndex: 4
+        isKind:
           of: Namespace
-      - documentIndex: 3
+      - documentIndex: 4
         equal:
           path: metadata.name
           value: cluster-west-west
-      - documentIndex: 4
+      - documentIndex: 5
         isKind:
           of: ClusterDeployment
-      - documentIndex: 4
+      - documentIndex: 5
         equal:
           path: spec.platform.azure.region
           value: westus2
-      - documentIndex: 5
+      - documentIndex: 6
         isKind:
           of: ManagedCluster
-      - documentIndex: 5
+      - documentIndex: 6
         equal:
           path: metadata.labels["cluster.open-cluster-management.io/clusterset"]
           value: west
+      - documentIndex: 7
+        isKind:
+          of: KlusterletAddonConfig

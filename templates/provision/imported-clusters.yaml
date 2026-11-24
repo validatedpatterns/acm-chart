@@ -1,0 +1,43 @@
+{{- range .Values.acm.importedClusters }}
+{{- include "acm.imported.validateEntry" . }}
+{{- $secretName := .secretName }}
+{{- $clusterGroup := .clusterGroup }}
+{{- $clusterName := include "acm.imported.clusterName" $secretName }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $clusterName }}
+---
+{{/* Only manage clusterGroup here. ACM overwrites cloud/vendor and adds discovery/addon labels after import. */}}
+{{ include "acm.managedCluster" (dict "name" $clusterName "labels" (dict "clusterGroup" $clusterGroup)) }}
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: {{ $clusterName }}-auto-import
+  namespace: {{ $clusterName }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  data:
+  - secretKey: kubeconfig
+    remoteRef:
+      key: secret/data/hub/{{ $secretName }}
+      property: kubeconfig
+  refreshInterval: 1h0m0s
+  secretStoreRef:
+    name: {{ $.Values.secretStore.name }}
+    kind: {{ $.Values.secretStore.kind }}
+  target:
+    name: auto-import-secret
+    creationPolicy: Owner
+    template:
+      type: Opaque
+      data:
+        autoImportRetry: "5"
+        kubeconfig: |-
+          {{ "{{ .kubeconfig | toString }}" }}
+---
+{{ include "acm.klusterletAddonConfig" (dict "name" $clusterName) }}
+{{- end }}
